@@ -36,10 +36,7 @@ func loop(client *gitlab.Client) {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	godotenv.Load()
 
 	GITLAB_URL := os.Getenv("GITLAB_URL")
 	GITLAB_TOKEN := os.Getenv("GITLAB_TOKEN")
