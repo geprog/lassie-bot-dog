@@ -2,8 +2,8 @@ package auto_merge
 
 import (
 	"fmt"
-	"log"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -23,7 +23,7 @@ func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 
 	mergeRequests, _, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
 	if err != nil {
-		log.Fatal("Can't load merge-requests", err)
+		log.Debug("Can't load merge-requests", err)
 	}
 
 	for _, mergeRequest := range mergeRequests {
@@ -32,13 +32,13 @@ func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 }
 
 func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
-	log.Println("trying >>>", mergeRequest.Title)
+	log.Debug("trying merge-request >>>", mergeRequest.Title)
 
 	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{}
 	notes, _, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
 	for _, note := range notes {
 		if !note.System {
-			log.Println(note.Author.Name, ":", note.Body)
+			log.Debug(note.Author.Name, ":", note.Body)
 		}
 	}
 
@@ -52,7 +52,7 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 
 	approvals, _, err := plugin.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
 	if err != nil {
-		log.Fatal("Can't load merge-request approvals", err)
+		log.Debug("Can't load merge-request approvals", err)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 
 	pipelines, _, err := plugin.Client.MergeRequests.ListMergeRequestPipelines(project.ID, mergeRequest.IID)
 	if err != nil {
-		log.Fatal("Can't load merge-request pipelines", err)
+		log.Debug("Can't load merge-request pipelines", err)
 		return
 	}
 
@@ -83,5 +83,5 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 	}
 	plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
 
-	log.Println("merged >>>", squashMessage)
+	log.Info("merged >>>", squashMessage)
 }

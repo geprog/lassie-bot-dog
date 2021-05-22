@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/GEPROG/lassie-bot-dog/plugins"
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -36,13 +36,16 @@ func loop(client *gitlab.Client) {
 }
 
 func main() {
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Debug("No .env file found")
+	}
 
 	GITLAB_URL := os.Getenv("GITLAB_URL")
 	GITLAB_TOKEN := os.Getenv("GITLAB_TOKEN")
 	ENABLED_PROJECTS = strings.Split(os.Getenv("ENABLED_PROJECTS"), ",")
 
-	log.Println("Lassie is waking up '" + GITLAB_URL + "' ...")
+	log.Info("Lassie is waking up '" + GITLAB_URL + "' ...")
 
 	client, err := gitlab.NewClient(GITLAB_TOKEN,
 		gitlab.WithBaseURL(GITLAB_URL))
@@ -52,7 +55,7 @@ func main() {
 
 	loadedPlugins = plugins.GetPlugins(client)
 
-	log.Println("Lassie is now watching for jobs!")
+	log.Info("Lassie is now watching for jobs!")
 
 	s := gocron.NewScheduler(time.UTC)
 	s.Every(5).Seconds().Do(func() {
