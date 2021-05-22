@@ -11,10 +11,6 @@ type AutoMergePlugin struct {
 	Client *gitlab.Client
 }
 
-// danger => :poop: :collision: :exclamation:
-// success => :green_heart:
-// skipped => :hourglass_flowing_sand:
-
 func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 	opt := &gitlab.ListProjectMergeRequestsOptions{
 		State:  gitlab.String("opened"),
@@ -34,39 +30,12 @@ func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
 	log.Println("trying >>>", mergeRequest.Title)
 
-	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{}
-	notes, _, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
-	for _, note := range notes {
-		if !note.System {
-			log.Println(note.Author.Name, ":", note.Body)
-		}
-	}
-
-	if mergeRequest.HasConflicts {
-		return
-	}
-
-	if !mergeRequest.BlockingDiscussionsResolved {
-		return
-	}
-
-	approvals, _, err := plugin.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
-	if err != nil {
-		log.Fatal("Can't load merge-request approvals", err)
-		return
-	}
-
-	if len(approvals.ApprovedBy) < 1 {
-		return
-	}
-
-	pipelines, _, err := plugin.Client.MergeRequests.ListMergeRequestPipelines(project.ID, mergeRequest.IID)
-	if err != nil {
-		log.Fatal("Can't load merge-request pipelines", err)
-		return
-	}
-
-	if pipelines[0].Status != "success" {
+	status := plugin.checkMergeRequest(project, mergeRequest)
+	if status.hasConflicts != mergeStatusSuccess ||
+		status.openDicussions != mergeStatusSuccess ||
+		status.passingPipeline != mergeStatusSuccess ||
+		status.enoughApprovals != mergeStatusSuccess {
+		plugin.updateStatusComment(project, mergeRequest, status)
 		return
 	}
 
@@ -82,6 +51,8 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 		Body: gitlab.String(":dog: Thank you for your contribution. Looks great to me :feet:"),
 	}
 	plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
+
+	plugin.updateStatusComment(project, mergeRequest, status)
 
 	log.Println("merged >>>", squashMessage)
 }
