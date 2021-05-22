@@ -15,64 +15,92 @@ const (
 )
 
 type mergeStatus struct {
-	hasConflicts    mergeStatusLevel
-	openDicussions  mergeStatusLevel
-	enoughApprovals mergeStatusLevel
-	passingPipeline mergeStatusLevel
+	hasConflicts        mergeStatusLevel
+	openDicussions      mergeStatusLevel
+	isNotWorkInProgress mergeStatusLevel
+	hasNeededLabels     mergeStatusLevel
+	enoughApprovals     mergeStatusLevel
+	passingPipeline     mergeStatusLevel
 }
 
-func equalMergeStatus(mergeStatusA *mergeStatus, mergeStatusB *mergeStatus) bool {
-	return mergeStatusA.hasConflicts == mergeStatusB.hasConflicts &&
-		mergeStatusA.openDicussions == mergeStatusB.openDicussions &&
-		mergeStatusA.passingPipeline == mergeStatusB.passingPipeline &&
-		mergeStatusA.enoughApprovals == mergeStatusB.enoughApprovals
+// func equalMergeStatus(mergeStatusA *mergeStatus, mergeStatusB *mergeStatus) bool {
+// 	return mergeStatusA.hasConflicts == mergeStatusB.hasConflicts &&
+// 		mergeStatusA.openDicussions == mergeStatusB.openDicussions &&
+// 		mergeStatusA.passingPipeline == mergeStatusB.passingPipeline &&
+// 		mergeStatusA.enoughApprovals == mergeStatusB.enoughApprovals
+// }
+
+func hasMergeRequestLabel(mergeRequest *gitlab.MergeRequest, searchedLabel string) bool {
+	for _, label := range mergeRequest.Labels {
+		if searchedLabel == label {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
 	status := &mergeStatus{
-		openDicussions:  mergeStatusSkipped,
-		enoughApprovals: mergeStatusSkipped,
-		passingPipeline: mergeStatusSkipped,
-		hasConflicts:    mergeStatusSkipped,
+		openDicussions:      mergeStatusSkipped,
+		enoughApprovals:     mergeStatusSkipped,
+		passingPipeline:     mergeStatusSkipped,
+		hasConflicts:        mergeStatusSkipped,
+		isNotWorkInProgress: mergeStatusSkipped,
+		hasNeededLabels:     mergeStatusSkipped,
 	}
 
-	// has conflicts
-	status.hasConflicts = mergeStatusFailed
-	if mergeRequest.HasConflicts {
-		return status
+	// has no conflicts
+	if !mergeRequest.HasConflicts {
+		status.hasConflicts = mergeStatusSuccess
+	} else {
+		status.hasConflicts = mergeStatusFailed
 	}
-	status.hasConflicts = mergeStatusSuccess
 
-	// open discussions
-	status.openDicussions = mergeStatusFailed
-	if !mergeRequest.BlockingDiscussionsResolved {
-		return status
+	// has no open discussions
+	if mergeRequest.BlockingDiscussionsResolved {
+		status.openDicussions = mergeStatusSuccess
+	} else {
+		status.openDicussions = mergeStatusFailed
 	}
-	status.openDicussions = mergeStatusSuccess
 
-	// passing ci
-	status.enoughApprovals = mergeStatusFailed
+	// is not work-in-progress
+	if !mergeRequest.WorkInProgress {
+		status.isNotWorkInProgress = mergeStatusSuccess
+	} else {
+		status.isNotWorkInProgress = mergeStatusFailed
+	}
+
+	// has needed labels
+	if hasMergeRequestLabel(mergeRequest, "👀 Ready for Review") {
+		status.hasNeededLabels = mergeStatusSuccess
+	} else {
+		status.hasNeededLabels = mergeStatusFailed
+	}
+
+	// has enough approvals
 	approvals, _, err := plugin.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
-	if err != nil {
-		log.Println("Can't load merge-request approvals", err)
-		return status
-	}
-	if len(approvals.ApprovedBy) < 1 {
-		return status
-	}
-	status.enoughApprovals = mergeStatusSuccess
+	if err == nil && len(approvals.ApprovedBy) >= 1 {
+		status.enoughApprovals = mergeStatusSuccess
+	} else {
+		status.enoughApprovals = mergeStatusFailed
 
-	// enough approvals
-	status.passingPipeline = mergeStatusFailed
+		if err != nil {
+			log.Println("Can't load merge-request approvals", err)
+		}
+	}
+
+	// passed ci
 	pipelines, _, err := plugin.Client.MergeRequests.ListMergeRequestPipelines(project.ID, mergeRequest.IID)
-	if err != nil {
-		log.Println("Can't load merge-request pipelines", err)
-		return status
+	if err == nil && pipelines[0].Status != "success" {
+		status.passingPipeline = mergeStatusSuccess
+	} else {
+		if err != nil {
+			log.Println("Can't load merge-request pipelines", err)
+		}
+
+		status.passingPipeline = mergeStatusFailed
 	}
-	if pipelines[0].Status != "success" {
-		return status
-	}
-	status.passingPipeline = mergeStatusSuccess
 
 	return status
 }

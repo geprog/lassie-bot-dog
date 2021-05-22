@@ -13,8 +13,8 @@ type AutoMergePlugin struct {
 
 func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 	opt := &gitlab.ListProjectMergeRequestsOptions{
-		State:  gitlab.String("opened"),
-		Labels: []string{"👀 Ready for Review"},
+		State: gitlab.String("opened"),
+		// Labels: []string{"👀 Ready for Review"},
 	}
 
 	mergeRequests, _, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
