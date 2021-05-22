@@ -2,8 +2,8 @@ package auto_merge
 
 import (
 	"fmt"
-	"log"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -19,7 +19,7 @@ func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 
 	mergeRequests, _, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
 	if err != nil {
-		log.Fatal("Can't load merge-requests", err)
+		log.Debug("Can't load merge-requests", err)
 	}
 
 	for _, mergeRequest := range mergeRequests {
@@ -28,7 +28,7 @@ func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
 }
 
 func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
-	log.Println("trying >>>", mergeRequest.Title)
+	log.Debug("trying merge-request >>>", mergeRequest.Title)
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
 	if status.hasConflicts != mergeStatusSuccess ||
@@ -54,5 +54,5 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 
 	plugin.updateStatusComment(project, mergeRequest, status)
 
-	log.Println("merged >>>", squashMessage)
+	log.Info("merged >>>", squashMessage)
 }
