@@ -44,7 +44,7 @@ func encodeMergeStatus(status *mergeStatus) string {
 	comment = comment + "- " + getMergeStatusLevelEmojis(status.openDicussions) + " All discussions about your changes have been resolved\n"
 	comment = comment + "- " + getMergeStatusLevelEmojis(status.passingPipeline) + " A pipline successfully tested your code\n"
 	comment = comment + "- " + getMergeStatusLevelEmojis(status.enoughApprovals) + " Enough reviewers liked your code\n"
-	comment = comment + "---\nI am [Lassie](@lassie) :dog: and I will watch you progress from time to time to auto merge your changes once finished.\n"
+	comment = comment + "---\nI am [Lassie](@lassie) :dog: and I will watch your progress from time to time to auto merge your changes once finished.\n"
 
 	return comment
 }
