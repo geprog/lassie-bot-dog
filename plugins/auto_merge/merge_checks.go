@@ -1,8 +1,7 @@
 package auto_merge
 
 import (
-	"log"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -86,7 +85,7 @@ func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 		status.enoughApprovals = mergeStatusFailed
 
 		if err != nil {
-			log.Println("Can't load merge-request approvals", err)
+			log.Error("Can't load merge-request approvals", err)
 		}
 	}
 
@@ -96,7 +95,7 @@ func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 		status.passingPipeline = mergeStatusSuccess
 	} else {
 		if err != nil {
-			log.Println("Can't load merge-request pipelines", err)
+			log.Error("Can't load merge-request pipelines", err)
 		}
 
 		status.passingPipeline = mergeStatusFailed

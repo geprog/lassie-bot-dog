@@ -32,6 +32,8 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
 	if status.hasConflicts != mergeStatusSuccess ||
+		status.hasNeededLabels != mergeStatusSuccess ||
+		status.isNotWorkInProgress != mergeStatusSuccess ||
 		status.openDicussions != mergeStatusSuccess ||
 		status.passingPipeline != mergeStatusSuccess ||
 		status.enoughApprovals != mergeStatusSuccess {

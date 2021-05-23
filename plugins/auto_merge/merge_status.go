@@ -3,6 +3,7 @@ package auto_merge
 import (
 	"regexp"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -83,7 +84,7 @@ func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 }
 
 func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
-	// log.Println("comment", comment)
+	log.Debug("comment", comment)
 
 	// update existing note
 	if note != nil {
