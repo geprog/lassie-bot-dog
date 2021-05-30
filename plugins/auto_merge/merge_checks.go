@@ -1,105 +1,60 @@
 package auto_merge
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/checks"
 	"github.com/xanzy/go-gitlab"
 )
 
-type mergeStatusLevel int
-
-const (
-	mergeStatusSkipped mergeStatusLevel = iota
-	mergeStatusSuccess mergeStatusLevel = iota
-	mergeStatusFailed  mergeStatusLevel = iota
-)
-
-type mergeStatus struct {
-	hasConflicts        mergeStatusLevel
-	openDicussions      mergeStatusLevel
-	isNotWorkInProgress mergeStatusLevel
-	hasNeededLabels     mergeStatusLevel
-	enoughApprovals     mergeStatusLevel
-	passingPipeline     mergeStatusLevel
+type mergeCheck interface {
+	Check(client *gitlab.Client, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool
+	Name() string
+	FailedText() string
+	PassedText() string
 }
 
-// func equalMergeStatus(mergeStatusA *mergeStatus, mergeStatusB *mergeStatus) bool {
-// 	return mergeStatusA.hasConflicts == mergeStatusB.hasConflicts &&
-// 		mergeStatusA.openDicussions == mergeStatusB.openDicussions &&
-// 		mergeStatusA.passingPipeline == mergeStatusB.passingPipeline &&
-// 		mergeStatusA.enoughApprovals == mergeStatusB.enoughApprovals
-// }
+type mergeCheckResult struct {
+	mergeCheckName   string
+	mergeCheckPassed bool
+}
 
-func hasMergeRequestLabel(mergeRequest *gitlab.MergeRequest, searchedLabel string) bool {
-	for _, label := range mergeRequest.Labels {
-		if searchedLabel == label {
-			return true
-		}
-	}
-
-	return false
+type mergeStatus struct {
+	checkResults    []*mergeCheckResult
+	merged          bool
+	allChecksPassed bool
 }
 
 func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
 	status := &mergeStatus{
-		openDicussions:      mergeStatusSkipped,
-		enoughApprovals:     mergeStatusSkipped,
-		passingPipeline:     mergeStatusSkipped,
-		hasConflicts:        mergeStatusSkipped,
-		isNotWorkInProgress: mergeStatusSkipped,
-		hasNeededLabels:     mergeStatusSkipped,
+		checkResults:    []*mergeCheckResult{},
+		merged:          mergeRequest.MergedBy != nil,
+		allChecksPassed: true,
 	}
 
-	// has no conflicts
-	if !mergeRequest.HasConflicts {
-		status.hasConflicts = mergeStatusSuccess
-	} else {
-		status.hasConflicts = mergeStatusFailed
-	}
+	for _, mergeCheck := range plugin.mergeChecks() {
+		mergeCheckName := mergeCheck.Name()
+		mergeCheckPassed := mergeCheck.Check(plugin.Client, project, mergeRequest)
 
-	// has no open discussions
-	if mergeRequest.BlockingDiscussionsResolved {
-		status.openDicussions = mergeStatusSuccess
-	} else {
-		status.openDicussions = mergeStatusFailed
-	}
+		status.checkResults = append(status.checkResults, &mergeCheckResult{
+			mergeCheckName:   mergeCheckName,
+			mergeCheckPassed: mergeCheckPassed,
+		})
 
-	// is not work-in-progress
-	if !mergeRequest.WorkInProgress {
-		status.isNotWorkInProgress = mergeStatusSuccess
-	} else {
-		status.isNotWorkInProgress = mergeStatusFailed
-	}
-
-	// has needed labels
-	if hasMergeRequestLabel(mergeRequest, "👀 Ready for Review") {
-		status.hasNeededLabels = mergeStatusSuccess
-	} else {
-		status.hasNeededLabels = mergeStatusFailed
-	}
-
-	// has enough approvals
-	approvals, _, err := plugin.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
-	if err == nil && len(approvals.ApprovedBy) >= 1 {
-		status.enoughApprovals = mergeStatusSuccess
-	} else {
-		status.enoughApprovals = mergeStatusFailed
-
-		if err != nil {
-			log.Error("Can't load merge-request approvals", err)
+		// as soon as one check failed change allChecksPassed to false
+		if !mergeCheckPassed {
+			status.allChecksPassed = false
 		}
-	}
-
-	// passed ci
-	pipelines, _, err := plugin.Client.MergeRequests.ListMergeRequestPipelines(project.ID, mergeRequest.IID)
-	if err == nil && pipelines[0].Status != "success" {
-		status.passingPipeline = mergeStatusSuccess
-	} else {
-		if err != nil {
-			log.Error("Can't load merge-request pipelines", err)
-		}
-
-		status.passingPipeline = mergeStatusFailed
 	}
 
 	return status
+}
+
+func (plugin AutoMergePlugin) mergeChecks() [6]mergeCheck {
+	return [...]mergeCheck{
+		checks.HasEnoughApprovalsCheck{},
+		checks.HasRequiredLabelsCheck{},
+		checks.HasNoConflictsCheck{},
+		checks.HasNoOpenDiscussionsCheck{},
+		checks.IsNotWorkInProgressCheck{},
+		checks.PassesCICheck{},
+	}
 }
