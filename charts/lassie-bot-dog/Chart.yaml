@@ -1,9 +1,0 @@
-apiVersion: v2
-name: lassie-bot-dog
-description: A Helm chart for lassie the bot dog
-
-type: application
-
-version: 0.1.0
-
-appVersion: "0.1.0"
