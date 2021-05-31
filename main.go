@@ -17,11 +17,14 @@ var loadedPlugins []plugins.Plugin
 
 func runPluginOnProject(client *gitlab.Client, project *gitlab.Project) {
 	for _, plugin := range loadedPlugins {
+		log.Debug("running plugin", plugin)
 		plugin.Execute(project)
 	}
 }
 
 func loop(client *gitlab.Client) {
+	log.Debug("starting loop ...")
+
 	p := &gitlab.ListProjectsOptions{}
 	projects, _, err := client.Projects.ListProjects(p)
 	if err != nil {
