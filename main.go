@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/GEPROG/lassie-bot-dog/plugins"
+	"github.com/GEPROG/lassie-bot-dog/utils"
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
@@ -32,7 +33,7 @@ func loop(client *gitlab.Client) {
 	}
 
 	for _, project := range projects {
-		if stringInSlice(project.PathWithNamespace, ENABLED_PROJECTS) {
+		if utils.StringInSlice(project.PathWithNamespace, ENABLED_PROJECTS) {
 			runPluginOnProject(client, project)
 		}
 	}
@@ -42,6 +43,10 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Debug("No .env file found")
+	}
+
+	if os.Getenv("LOG") == "debug" {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	GITLAB_URL := os.Getenv("GITLAB_URL")
@@ -61,7 +66,7 @@ func main() {
 	log.Info("Lassie is now watching for jobs!")
 
 	s := gocron.NewScheduler(time.UTC)
-	s.Every(5).Seconds().Do(func() {
+	s.Every(30).Seconds().Do(func() {
 		loop(client)
 	})
 
