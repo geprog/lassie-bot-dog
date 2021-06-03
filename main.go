@@ -34,6 +34,7 @@ func loop(client *gitlab.Client) {
 
 	for _, project := range projects {
 		if utils.StringInSlice(project.PathWithNamespace, ENABLED_PROJECTS) {
+			log.Debugf("Running on project: %s", project.PathWithNamespace)
 			runPluginOnProject(client, project)
 		}
 	}
@@ -50,22 +51,33 @@ func main() {
 	}
 
 	GITLAB_URL := os.Getenv("GITLAB_URL")
+	if GITLAB_URL == "" {
+		log.Fatal("Please provide a gitlab url with GITLAB_URL='https://gitlab.example.com'")
+	}
+
 	GITLAB_TOKEN := os.Getenv("GITLAB_TOKEN")
+	if GITLAB_TOKEN == "" {
+		log.Fatal("Please provide a gitlab token with GITLAB_TOKEN")
+	}
+
 	ENABLED_PROJECTS = strings.Split(os.Getenv("ENABLED_PROJECTS"), ",")
+	if os.Getenv("ENABLED_PROJECTS") == "" {
+		log.Fatal("Please provide a comma separated list of projects with ENABLED_PROJECTS='demo/test,demo/test2'")
+	}
 
 	log.Info("Lassie is waking up '" + GITLAB_URL + "' ...")
 
-	client, err := gitlab.NewClient(GITLAB_TOKEN,
-		gitlab.WithBaseURL(GITLAB_URL))
+	client, err := gitlab.NewClient(GITLAB_TOKEN, gitlab.WithBaseURL(GITLAB_URL))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
 	loadedPlugins = plugins.GetPlugins(client)
 
-	log.Info("Lassie is now watching for jobs!")
+	log.Info("Lassie is now watching for some work!")
 
 	s := gocron.NewScheduler(time.UTC)
+	s.SetMaxConcurrentJobs(1, gocron.RescheduleMode) // prevent parallel execution and skip if last run hasn't finished yet
 	s.Every(30).Seconds().Do(func() {
 		loop(client)
 	})

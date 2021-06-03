@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+Metadata:
+  name: "{{ include "lassie-bot-dog.fullname" . }}-config"
+  labels:
+    {{- include "lassie-bot-dog.labels" . | nindent 4 }}
+data:
+  GITLAB_URL: {{ default "" .Values.gitlab.url | quote }}
+  ENABLED_PROJECTS: {{ default "" .Values.lassie.enabledProjects | quote }}

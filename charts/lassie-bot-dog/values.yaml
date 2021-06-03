@@ -4,6 +4,13 @@
 
 replicaCount: 1
 
+gitlab:
+  url: ""
+  token: ""
+
+lassie:
+  enabledProjects: "" # comma separated list of Gitlab projects with namespace: test/demo-repo,test/other-demo-repo
+
 image:
   pullPolicy: IfNotPresent
   repository: "geprog/lassie-bot-dog"
