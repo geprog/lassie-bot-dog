@@ -16,7 +16,7 @@ func (check PassesCICheck) Check(client *gitlab.Client, project *gitlab.Project,
 		return false
 	}
 
-	return len(pipelines) > 0 && pipelines[0].Status == "success"
+	return pipelines[0].Status == "success"
 }
 
 func (plugin PassesCICheck) Name() string {
