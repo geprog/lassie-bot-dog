@@ -9,22 +9,22 @@ import (
 )
 
 type autoMergePlugin struct {
-	lastUpdate map[int]*time.Time
-	Client     *gitlab.Client
+	lastestChecks map[int]*time.Time
+	Client        *gitlab.Client
 }
 
 func NewAutoMergePlugin(client *gitlab.Client) *autoMergePlugin {
 	return &autoMergePlugin{
-		Client:     client,
-		lastUpdate: make(map[int]*time.Time),
+		Client:        client,
+		lastestChecks: make(map[int]*time.Time),
 	}
 }
 
 func (plugin autoMergePlugin) Execute(project *gitlab.Project) {
 	opt := &gitlab.ListProjectMergeRequestsOptions{
 		State:        gitlab.String("opened"),
-		UpdatedAfter: plugin.lastUpdate[project.ID],
-		TargetBranch: &project.DefaultBranch,
+		UpdatedAfter: plugin.lastestChecks[project.ID],
+		// TargetBranch: &project.DefaultBranch,
 		ListOptions: gitlab.ListOptions{
 			PerPage: 10,
 			Page:    1,
@@ -60,7 +60,7 @@ func (plugin autoMergePlugin) Execute(project *gitlab.Project) {
 
 	log.Debugf("checked total of %d merge-requests\n", totalMergeRequests)
 
-	plugin.lastUpdate[project.ID] = &now
+	plugin.lastestChecks[project.ID] = &now
 }
 
 func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
