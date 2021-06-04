@@ -6,6 +6,6 @@ import (
 )
 
 func GetPlugins(client *gitlab.Client) []Plugin {
-	plugins := []Plugin{auto_merge.AutoMergePlugin{Client: client}}
+	plugins := []Plugin{auto_merge.NewAutoMergePlugin(client)}
 	return plugins
 }

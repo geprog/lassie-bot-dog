@@ -2,31 +2,68 @@ package auto_merge
 
 import (
 	"fmt"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
-type AutoMergePlugin struct {
-	Client *gitlab.Client
+type autoMergePlugin struct {
+	lastUpdate map[int]*time.Time
+	Client     *gitlab.Client
 }
 
-func (plugin AutoMergePlugin) Execute(project *gitlab.Project) {
+func NewAutoMergePlugin(client *gitlab.Client) *autoMergePlugin {
+	return &autoMergePlugin{
+		Client:     client,
+		lastUpdate: make(map[int]*time.Time),
+	}
+}
+
+func (plugin autoMergePlugin) Execute(project *gitlab.Project) {
 	opt := &gitlab.ListProjectMergeRequestsOptions{
-		State: gitlab.String("opened"),
+		State:        gitlab.String("opened"),
+		UpdatedAfter: plugin.lastUpdate[project.ID],
+		TargetBranch: &project.DefaultBranch,
+		ListOptions: gitlab.ListOptions{
+			PerPage: 10,
+			Page:    1,
+		},
 	}
 
-	mergeRequests, _, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
-	if err != nil {
-		log.Debug("Can't load merge-requests", err)
+	totalMergeRequests := 0
+	now := time.Now()
+
+	for {
+		// Get the first page with merge-requests
+		mergeRequests, resp, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
+		if err != nil {
+			log.Debug("Can't load merge-requests", err)
+		}
+
+		log.Debugf("checking %d merge-requests ...\n", len(mergeRequests))
+
+		totalMergeRequests = totalMergeRequests + len(mergeRequests)
+
+		for _, mergeRequest := range mergeRequests {
+			plugin.autoMerge(project, mergeRequest)
+		}
+
+		// Exit the loop when we've seen all pages
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		// Update the page number to get the next page
+		opt.Page = resp.NextPage
 	}
 
-	for _, mergeRequest := range mergeRequests {
-		plugin.autoMerge(project, mergeRequest)
-	}
+	log.Debugf("checked total of %d merge-requests\n", totalMergeRequests)
+
+	plugin.lastUpdate[project.ID] = &now
 }
 
-func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
+func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
 	log.Debug("trying to auto merge >>>", mergeRequest.Title)
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
