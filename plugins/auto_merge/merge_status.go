@@ -41,6 +41,7 @@ func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 		comment = comment + "I am [Lassie](@lassie) :dog: and I will watch your progress from time to time to auto merge your changes once finished.\n"
 	}
 
+	// gitlab removes new-lines from the comments so we do so as well
 	return strings.TrimSuffix(comment, "\n")
 }
 
@@ -66,7 +67,7 @@ func (plugin autoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 }
 
 func (plugin autoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
-	log.Trace("comment-content", comment)
+	log.Trace("comment", comment)
 
 	// update existing note
 	if note != nil {
