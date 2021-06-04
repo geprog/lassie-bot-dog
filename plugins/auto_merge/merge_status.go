@@ -2,6 +2,7 @@ package auto_merge
 
 import (
 	"regexp"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
@@ -24,7 +25,7 @@ func encodeMergeCheckStatus(mergeCheck mergeCheck, status *mergeStatus) string {
 	return ""
 }
 
-func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
+func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	comment := authorTag + "\n"
 
 	if status.merged {
@@ -40,16 +41,17 @@ func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 		comment = comment + "I am [Lassie](@lassie) :dog: and I will watch your progress from time to time to auto merge your changes once finished.\n"
 	}
 
-	return comment
+	// gitlab removes new-lines from the comments so we do so as well
+	return strings.TrimSuffix(comment, "\n")
 }
 
-func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
+func (plugin autoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
 	note := plugin.getStatusComment(project, mergeRequest)
 	comment := plugin.encodeMergeStatus(status)
 	plugin.saveStatusComment(project, mergeRequest, comment, note)
 }
 
-func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
+func (plugin autoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
 	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{}
 	notes, _, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
 
@@ -64,15 +66,23 @@ func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 	return nil
 }
 
-func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
-	log.Debug("comment", comment)
+func (plugin autoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
+	log.Trace("comment", comment)
 
 	// update existing note
 	if note != nil {
+		if note.Body == comment {
+			log.Debug("comment is already up to date")
+			return
+		}
+
 		updateMergeRequestNoteOptions := &gitlab.UpdateMergeRequestNoteOptions{
 			Body: gitlab.String(comment),
 		}
 		plugin.Client.Notes.UpdateMergeRequestNote(project.ID, mergeRequest.IID, note.ID, updateMergeRequestNoteOptions)
+
+		log.Debug("update comment")
+
 		return
 	}
 
@@ -81,4 +91,5 @@ func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 	}
 	plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
 
+	log.Debug("create comment")
 }
