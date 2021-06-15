@@ -6,20 +6,6 @@
 - She can check your progress on Merge-Requests, merge them and hand out treats for diligent contributors
 - More to come ...
 
-## Installation
-
-### Create new Gitlab account for lassie
-
-TBD :thinking:
-
-### Install lassie with helm
-
-```bash
-helm repo add lassie-bot-dog https://geprog.github.io/lassie-bot-dog/
-helm search repo lassie-bot-dog
-helm install lassie-bot-dog lassie-bot-dog/lassie-bot-dog
-```
-
 ## Project setup
 
 1. Grant your lassie bot account access to the project / repository
