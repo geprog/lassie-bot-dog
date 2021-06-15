@@ -15,10 +15,10 @@ func encodeMergeCheckStatus(mergeCheck mergeCheck, status *mergeStatus) string {
 		if mergeCheckResult.mergeCheckName == mergeCheck.Name() {
 			if mergeCheckResult.mergeCheckPassed {
 				return "- :green_heart: " + mergeCheck.PassedText() + "\n"
-			} else {
-				// :collision: :exclamation:
-				return "- :poop: " + mergeCheck.FailedText() + "\n"
 			}
+
+			// :collision: :exclamation:
+			return "- :poop: " + mergeCheck.FailedText() + "\n"
 		}
 	}
 
@@ -34,7 +34,7 @@ func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 		comment = comment + "I am [Lassie](@lassie) :dog: and I help with some housekeeping tasks.\n"
 	} else {
 		comment = comment + "### Your current merge request status is:\n\n"
-		for _, mergeCheck := range plugin.mergeChecks() {
+		for _, mergeCheck := range mergeChecks {
 			comment = comment + encodeMergeCheckStatus(mergeCheck, status)
 		}
 		comment = comment + "---\n"

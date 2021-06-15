@@ -1,16 +1,15 @@
 package checks
 
 import (
+	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/xanzy/go-gitlab"
 )
 
 type HasRequiredLabelsCheck struct {
 }
 
-func (check HasRequiredLabelsCheck) Check(client *gitlab.Client, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
-	neededLabels := [...]string{"👀 Ready for Review"}
-
-	for _, neededLabel := range neededLabels {
+func (check HasRequiredLabelsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+	for _, neededLabel := range config.NeededLabels {
 		if !check.hasMergeRequestLabel(mergeRequest, neededLabel) {
 			return false
 		}

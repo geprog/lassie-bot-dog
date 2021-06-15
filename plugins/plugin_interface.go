@@ -1,7 +1,11 @@
 package plugins
 
-import "github.com/xanzy/go-gitlab"
+import (
+	"github.com/GEPROG/lassie-bot-dog/config"
+	"github.com/xanzy/go-gitlab"
+)
 
 type Plugin interface {
-	Execute(project *gitlab.Project)
+	Name() string
+	Execute(project *gitlab.Project, config config.ProjectConfig)
 }

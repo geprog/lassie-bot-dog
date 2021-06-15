@@ -2,45 +2,62 @@ package main
 
 import (
 	"os"
-	"strings"
 	"time"
 
+	"github.com/GEPROG/lassie-bot-dog/config"
 	"github.com/GEPROG/lassie-bot-dog/plugins"
-	"github.com/GEPROG/lassie-bot-dog/utils"
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
-var ENABLED_PROJECTS []string
 var loadedPlugins []plugins.Plugin
+var projectConfigs map[string]config.ProjectConfig
 
-func runPluginOnProject(client *gitlab.Client, project *gitlab.Project) {
-	for _, plugin := range loadedPlugins {
-		log.Debug("running plugin", plugin)
-		plugin.Execute(project)
-	}
-}
-
-func loop(client *gitlab.Client) {
-	log.Debug("starting loop ...")
+func loopConfig(client *gitlab.Client) {
+	log.Debug("Starting config loop ...")
 
 	p := &gitlab.ListProjectsOptions{}
 	projects, _, err := client.Projects.ListProjects(p)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		log.Debugf("Failed to receive project list: %v", err)
 	}
 
 	for _, project := range projects {
-		if utils.StringInSlice(project.PathWithNamespace, ENABLED_PROJECTS) {
-			log.Debugf("Running on project: %s", project.PathWithNamespace)
-			runPluginOnProject(client, project)
+		config := config.LoadConfig(client, project)
+		if config == nil {
+			log.Debugf("No project config found for %s", project.PathWithNamespace)
+			continue
+		}
+
+		projectConfigs[project.PathWithNamespace] = *config
+		log.Debugf("Found Lassie config for %s", project.PathWithNamespace)
+	}
+}
+
+func loopPlugins(client *gitlab.Client) {
+	log.Debug("Starting plugin loop ...")
+
+	p := &gitlab.ListProjectsOptions{}
+	projects, _, err := client.Projects.ListProjects(p)
+	if err != nil {
+		log.Debugf("Failed to receive project list: %v", err)
+	}
+
+	for _, project := range projects {
+		if config, ok := projectConfigs[project.PathWithNamespace]; ok {
+			for _, plugin := range loadedPlugins {
+				log.Debugf("Running plugin '%s' on project '%s'", plugin.Name(), project.PathWithNamespace)
+				plugin.Execute(project, config)
+			}
 		}
 	}
 }
 
 func main() {
+	projectConfigs = make(map[string]config.ProjectConfig)
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Debug("No .env file found")
@@ -60,11 +77,6 @@ func main() {
 		log.Fatal("Please provide a gitlab token with GITLAB_TOKEN")
 	}
 
-	ENABLED_PROJECTS = strings.Split(os.Getenv("ENABLED_PROJECTS"), ",")
-	if os.Getenv("ENABLED_PROJECTS") == "" {
-		log.Fatal("Please provide a comma separated list of projects with ENABLED_PROJECTS='demo/test,demo/test2'")
-	}
-
 	log.Info("Lassie is waking up '" + GITLAB_URL + "' ...")
 
 	client, err := gitlab.NewClient(GITLAB_TOKEN, gitlab.WithBaseURL(GITLAB_URL))
@@ -74,13 +86,24 @@ func main() {
 
 	loadedPlugins = plugins.GetPlugins(client)
 
-	log.Info("Lassie is now watching for some work!")
+	log.Info("Lassie is now waiting for some work!")
 
-	s := gocron.NewScheduler(time.UTC)
-	s.SetMaxConcurrentJobs(1, gocron.RescheduleMode) // prevent parallel execution and skip if last run hasn't finished yet
-	s.Every(30).Seconds().Do(func() {
-		loop(client)
+	updateInterval := 30
+	if os.Getenv("LOG") == "debug" {
+		updateInterval = 5
+	}
+
+	sC := gocron.NewScheduler(time.UTC)
+	sC.SetMaxConcurrentJobs(1, gocron.RescheduleMode)
+	sC.Every(5).Minutes().Do(func() {
+		loopConfig(client)
 	})
+	sC.StartAsync()
 
-	s.StartBlocking()
+	sP := gocron.NewScheduler(time.UTC)
+	sP.SetMaxConcurrentJobs(1, gocron.RescheduleMode)
+	sP.Every(updateInterval).Seconds().Do(func() {
+		loopPlugins(client)
+	})
+	sP.StartBlocking()
 }

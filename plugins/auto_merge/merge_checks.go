@@ -2,11 +2,14 @@ package auto_merge
 
 import (
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/checks"
+	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/xanzy/go-gitlab"
 )
 
+var mergeChecks []mergeCheck
+
 type mergeCheck interface {
-	Check(client *gitlab.Client, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool
+	Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool
 	Name() string
 	FailedText() string
 	PassedText() string
@@ -24,15 +27,18 @@ type mergeStatus struct {
 }
 
 func (plugin autoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
+	// TODO: find better place to load this
+	plugin.setupMergeChecks()
+
 	status := &mergeStatus{
 		checkResults:    []*mergeCheckResult{},
 		merged:          mergeRequest.MergedBy != nil,
 		allChecksPassed: true,
 	}
 
-	for _, mergeCheck := range plugin.mergeChecks() {
+	for _, mergeCheck := range mergeChecks {
 		mergeCheckName := mergeCheck.Name()
-		mergeCheckPassed := mergeCheck.Check(plugin.Client, project, mergeRequest)
+		mergeCheckPassed := mergeCheck.Check(plugin.loadedConfig, project, mergeRequest)
 
 		status.checkResults = append(status.checkResults, &mergeCheckResult{
 			mergeCheckName:   mergeCheckName,
@@ -48,13 +54,21 @@ func (plugin autoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 	return status
 }
 
-func (plugin autoMergePlugin) mergeChecks() [6]mergeCheck {
-	return [...]mergeCheck{
-		checks.HasEnoughApprovalsCheck{},
+func (plugin autoMergePlugin) setupMergeChecks() {
+	if mergeChecks != nil {
+		return
+	}
+
+	mergeChecks = []mergeCheck{
+		checks.HasEnoughApprovalsCheck{
+			Client: plugin.Client,
+		},
 		checks.HasRequiredLabelsCheck{},
 		checks.HasNoConflictsCheck{},
 		checks.HasNoOpenDiscussionsCheck{},
 		checks.IsNotWorkInProgressCheck{},
-		checks.PassesCICheck{},
+		checks.PassesCICheck{
+			Client: plugin.Client,
+		},
 	}
 }
