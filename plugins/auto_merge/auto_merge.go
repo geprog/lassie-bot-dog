@@ -83,16 +83,25 @@ func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
 
-	if status.allChecksPassed {
-		squashMessage := fmt.Sprintf("%s (!%d)", mergeRequest.Title, mergeRequest.IID)
-		acceptMergeRequestOptions := &gitlab.AcceptMergeRequestOptions{
-			SquashCommitMessage:      gitlab.String(squashMessage),
-			ShouldRemoveSourceBranch: gitlab.Bool(true),
-			Squash:                   gitlab.Bool(plugin.loadedConfig.Squash),
-		}
-		plugin.Client.MergeRequests.AcceptMergeRequest(project.ID, mergeRequest.IID, acceptMergeRequestOptions)
-		log.Info("merged >>>", squashMessage)
+	if !status.allChecksPassed {
+		plugin.updateStatusComment(project, mergeRequest, status)
+		return
 	}
 
-	plugin.updateStatusComment(project, mergeRequest, status)
+	squashMessage := fmt.Sprintf("%s (!%d)", mergeRequest.Title, mergeRequest.IID)
+	acceptMergeRequestOptions := &gitlab.AcceptMergeRequestOptions{
+		SquashCommitMessage:      gitlab.String(squashMessage),
+		ShouldRemoveSourceBranch: gitlab.Bool(true),
+		Squash:                   gitlab.Bool(plugin.loadedConfig.Squash),
+	}
+
+	mergedMergeRequest, _, err := plugin.Client.MergeRequests.AcceptMergeRequest(project.ID, mergeRequest.IID, acceptMergeRequestOptions)
+	if err != nil {
+		log.Debug("Can't merge", err)
+	} else {
+		log.Info("merged >>>", squashMessage)
+		status.merged = true
+	}
+
+	plugin.updateStatusComment(project, mergedMergeRequest, status)
 }
