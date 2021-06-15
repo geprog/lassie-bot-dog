@@ -94,14 +94,14 @@ func main() {
 	}
 
 	sC := gocron.NewScheduler(time.UTC)
-	sC.SetMaxConcurrentJobs(1, gocron.RescheduleMode)
+	sC.SingletonMode()
 	sC.Every(5).Minutes().Do(func() {
 		loopConfig(client)
 	})
 	sC.StartAsync()
 
 	sP := gocron.NewScheduler(time.UTC)
-	sP.SetMaxConcurrentJobs(1, gocron.RescheduleMode)
+	sP.SingletonMode()
 	sP.Every(updateInterval).Seconds().Do(func() {
 		loopPlugins(client)
 	})
