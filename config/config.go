@@ -7,12 +7,7 @@ import (
 )
 
 type ProjectConfig struct {
-	Labels  []string                   `json:"labels"`
 	Plugins map[string]json.RawMessage `json:"plugins"`
-}
-
-func (c ProjectConfig) GetPluginConfig(pluginName string, config interface{}) error {
-	return json.Unmarshal(c.Plugins[pluginName], &config)
 }
 
 func LoadConfig(client *gitlab.Client, project *gitlab.Project) *ProjectConfig {
