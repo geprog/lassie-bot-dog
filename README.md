@@ -46,7 +46,7 @@ helm delete my-lassie-bot-dog
 
 ## Project setup
 
-1. Add Lassie to your projects as Developer or Maintainer, the later being required if she should be able to merge to protected branches
+1. Add Lassie to your projects as Developer or Maintainer, the latter being required if she should be able to merge to protected branches
 1. Add a config file for Lassie ([Config-file docs](#config))
 
 ## Config
