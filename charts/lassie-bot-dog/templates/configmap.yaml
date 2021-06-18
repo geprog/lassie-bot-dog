@@ -6,4 +6,3 @@ metadata:
     {{- include "lassie-bot-dog.labels" . | nindent 4 }}
 data:
   GITLAB_URL: {{ default "" .Values.gitlab.url | quote }}
-  ENABLED_PROJECTS: {{ default "" .Values.lassie.enabledProjects | quote }}

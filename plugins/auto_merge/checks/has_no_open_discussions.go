@@ -1,13 +1,14 @@
 package checks
 
 import (
+	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/xanzy/go-gitlab"
 )
 
 type HasNoOpenDiscussionsCheck struct {
 }
 
-func (check HasNoOpenDiscussionsCheck) Check(client *gitlab.Client, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check HasNoOpenDiscussionsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
 	return mergeRequest.BlockingDiscussionsResolved
 }
 

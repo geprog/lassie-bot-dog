@@ -1,13 +1,14 @@
 package checks
 
 import (
+	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/xanzy/go-gitlab"
 )
 
 type IsNotWorkInProgressCheck struct {
 }
 
-func (check IsNotWorkInProgressCheck) Check(client *gitlab.Client, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check IsNotWorkInProgressCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
 	return !mergeRequest.WorkInProgress
 }
 
