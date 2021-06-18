@@ -13,15 +13,15 @@ import (
 )
 
 var loadedPlugins []plugins.Plugin
-var projectConfigs map[string]config.ProjectConfig
 
-func loopConfig(client *gitlab.Client) {
-	log.Debug("Starting config loop ...")
+func loop(client *gitlab.Client) {
+	log.Debug("Starting plugin loop ...")
 
 	p := &gitlab.ListProjectsOptions{}
 	projects, _, err := client.Projects.ListProjects(p)
 	if err != nil {
 		log.Debugf("Failed to receive project list: %v", err)
+		return
 	}
 
 	for _, project := range projects {
@@ -31,33 +31,16 @@ func loopConfig(client *gitlab.Client) {
 			continue
 		}
 
-		projectConfigs[project.PathWithNamespace] = *config
 		log.Debugf("Found Lassie config for %s", project.PathWithNamespace)
-	}
-}
 
-func loopPlugins(client *gitlab.Client) {
-	log.Debug("Starting plugin loop ...")
-
-	p := &gitlab.ListProjectsOptions{}
-	projects, _, err := client.Projects.ListProjects(p)
-	if err != nil {
-		log.Debugf("Failed to receive project list: %v", err)
-	}
-
-	for _, project := range projects {
-		if config, ok := projectConfigs[project.PathWithNamespace]; ok {
-			for _, plugin := range loadedPlugins {
-				log.Debugf("Running plugin '%s' on project '%s'", plugin.Name(), project.PathWithNamespace)
-				plugin.Execute(project, config)
-			}
+		for _, plugin := range loadedPlugins {
+			log.Debugf("Running plugin '%s' on project '%s'", plugin.Name(), project.PathWithNamespace)
+			plugin.Execute(project, *config)
 		}
 	}
 }
 
 func main() {
-	projectConfigs = make(map[string]config.ProjectConfig)
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Debug("No .env file found")
@@ -67,19 +50,19 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	GITLAB_URL := os.Getenv("GITLAB_URL")
-	if GITLAB_URL == "" {
+	gitlabURL := os.Getenv("GITLAB_URL")
+	if gitlabURL == "" {
 		log.Fatal("Please provide a gitlab url with GITLAB_URL='https://gitlab.example.com'")
 	}
 
-	GITLAB_TOKEN := os.Getenv("GITLAB_TOKEN")
-	if GITLAB_TOKEN == "" {
+	gitlabToken := os.Getenv("GITLAB_TOKEN")
+	if gitlabToken == "" {
 		log.Fatal("Please provide a gitlab token with GITLAB_TOKEN")
 	}
 
-	log.Info("Lassie is waking up '" + GITLAB_URL + "' ...")
+	log.Info("Lassie is waking up '" + gitlabURL + "' ...")
 
-	client, err := gitlab.NewClient(GITLAB_TOKEN, gitlab.WithBaseURL(GITLAB_URL))
+	client, err := gitlab.NewClient(gitlabToken, gitlab.WithBaseURL(gitlabURL))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
@@ -93,17 +76,10 @@ func main() {
 		updateInterval = 5
 	}
 
-	sC := gocron.NewScheduler(time.UTC)
-	sC.SingletonMode()
-	sC.Every(5).Minutes().Do(func() {
-		loopConfig(client)
+	s := gocron.NewScheduler(time.UTC)
+	s.SetMaxConcurrentJobs(1, gocron.RescheduleMode)
+	s.Every(updateInterval).Seconds().Do(func() {
+		loop(client)
 	})
-	sC.StartAsync()
-
-	sP := gocron.NewScheduler(time.UTC)
-	sP.SingletonMode()
-	sP.Every(updateInterval).Seconds().Do(func() {
-		loopPlugins(client)
-	})
-	sP.StartBlocking()
+	s.StartBlocking()
 }
