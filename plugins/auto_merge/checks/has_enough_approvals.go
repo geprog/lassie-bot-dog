@@ -1,15 +1,17 @@
 package checks
 
 import (
+	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
 type HasEnoughApprovalsCheck struct {
+	Client *gitlab.Client
 }
 
-func (check HasEnoughApprovalsCheck) Check(client *gitlab.Client, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
-	approvals, _, err := client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
+func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+	approvals, _, err := check.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
 
 	if err != nil {
 		log.Error("Can't load merge-request approvals", err)
