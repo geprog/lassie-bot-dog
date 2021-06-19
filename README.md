@@ -14,7 +14,7 @@ First, create a user for Lassie on your GitLab. We'll use `lassie` as username.
 
 ### Create Gitlab api-token
 
-TBD
+Using the newly created `lassie` user, create a [Gitlab-Token](https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html#create-a-personal-access-token).
 
 ### Install Lassie with helm
 
