@@ -55,6 +55,7 @@ Lassie can be controlled with a config file. To enable lassie for a project you 
 
 ```json5
 {
+  "$schema": "https://raw.githubusercontent.com/geprog/lassie-bot-dog/main/config/lassie.schema.json",
   "plugins": {
     "auto_merge": {
       "squash": true,
