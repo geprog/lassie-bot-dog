@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JSON schema for Lassie config files (https://github.com/geprog/lassie-bot-dog)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "plugins": {
+      "description": "Define configurations for all available plugins",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auto_merge": {
+          "description": "Configuration for the auto_merge plugin",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "squash": {
+              "description": "Whether or not to squash the merge request when merging",
+              "type": "boolean"
+            },
+            "neededLabels": {
+              "description": "Labels needed for merge request being considered",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
