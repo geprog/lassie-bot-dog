@@ -22,11 +22,11 @@ func (plugin HasRequiredLabelsCheck) Name() string {
 	return "has-labels"
 }
 
-func (plugin HasRequiredLabelsCheck) PassedText() string {
+func (plugin HasRequiredLabelsCheck) PassedText(mergeRequestId int) string {
 	return "Your Merge-Request has all required labels"
 }
 
-func (plugin HasRequiredLabelsCheck) FailedText() string {
+func (plugin HasRequiredLabelsCheck) FailedText(mergeRequestId int) string {
 	return "Your Merge-Request is missing some required labels" // TODO list missing labels
 }
 

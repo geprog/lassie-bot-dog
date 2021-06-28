@@ -16,10 +16,10 @@ func (plugin IsNotWorkInProgressCheck) Name() string {
 	return "is-not-work-in-progress"
 }
 
-func (plugin IsNotWorkInProgressCheck) PassedText() string {
+func (plugin IsNotWorkInProgressCheck) PassedText(mergeRequestId int) string {
 	return "Your Merge-Request is marked as ready (no WIP-prefix)"
 }
 
-func (plugin IsNotWorkInProgressCheck) FailedText() string {
+func (plugin IsNotWorkInProgressCheck) FailedText(mergeRequestId int) string {
 	return "Your Merge-Request is not ready yet (marked with WIP-prefix)"
 }

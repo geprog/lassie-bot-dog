@@ -16,10 +16,10 @@ func (plugin HasNoConflictsCheck) Name() string {
 	return "has-conflicts"
 }
 
-func (plugin HasNoConflictsCheck) PassedText() string {
+func (plugin HasNoConflictsCheck) PassedText(mergeRequestId int) string {
 	return "Your changes do not have conflicts with the target branch."
 }
 
-func (plugin HasNoConflictsCheck) FailedText() string {
+func (plugin HasNoConflictsCheck) FailedText(mergeRequestId int) string {
 	return "Your changes have some conflicts with the target branch"
 }

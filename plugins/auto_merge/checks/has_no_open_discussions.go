@@ -16,10 +16,10 @@ func (plugin HasNoOpenDiscussionsCheck) Name() string {
 	return "has-no-open-discussions"
 }
 
-func (plugin HasNoOpenDiscussionsCheck) PassedText() string {
+func (plugin HasNoOpenDiscussionsCheck) PassedText(mergeRequestId int) string {
 	return "All discussions about your changes have been resolved"
 }
 
-func (plugin HasNoOpenDiscussionsCheck) FailedText() string {
+func (plugin HasNoOpenDiscussionsCheck) FailedText(mergeRequestId int) string {
 	return "There are still some ongoing discussions about your changes"
 }

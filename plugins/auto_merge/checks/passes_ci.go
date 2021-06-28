@@ -25,10 +25,10 @@ func (plugin PassesCICheck) Name() string {
 	return "passes-ci"
 }
 
-func (plugin PassesCICheck) PassedText() string {
+func (plugin PassesCICheck) PassedText(mergeRequestId int) string {
 	return "A pipline successfully tested your changes"
 }
 
-func (plugin PassesCICheck) FailedText() string {
+func (plugin PassesCICheck) FailedText(mergeRequestId int) string {
 	return "A pipeline detected some errors with your changes"
 }

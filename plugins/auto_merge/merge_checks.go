@@ -11,8 +11,8 @@ var mergeChecks []mergeCheck
 type mergeCheck interface {
 	Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool
 	Name() string
-	FailedText() string
-	PassedText() string
+	FailedText(mergeRequestId int) string
+	PassedText(mergeRequestId int) string
 }
 
 type mergeCheckResult struct {
@@ -21,6 +21,7 @@ type mergeCheckResult struct {
 }
 
 type mergeStatus struct {
+	mergeRequestId  int
 	checkResults    []*mergeCheckResult
 	merged          bool
 	allChecksPassed bool
@@ -31,6 +32,7 @@ func (plugin autoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 	plugin.setupMergeChecks()
 
 	status := &mergeStatus{
+		mergeRequestId:  mergeRequest.ID,
 		checkResults:    []*mergeCheckResult{},
 		merged:          mergeRequest.MergedBy != nil,
 		allChecksPassed: true,

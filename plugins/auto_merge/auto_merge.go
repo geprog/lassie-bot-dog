@@ -33,6 +33,7 @@ func (plugin autoMergePlugin) Execute(project *gitlab.Project, config config.Pro
 		State:        gitlab.String("opened"),
 		UpdatedAfter: plugin.lastestChecks[project.ID],
 		// TargetBranch: &project.DefaultBranch,
+		Labels: []string{"lassie-debug"},
 		ListOptions: gitlab.ListOptions{
 			PerPage: 10,
 			Page:    1,
