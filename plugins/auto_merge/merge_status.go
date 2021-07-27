@@ -52,15 +52,27 @@ func (plugin autoMergePlugin) updateStatusComment(project *gitlab.Project, merge
 }
 
 func (plugin autoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
-	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{}
-	notes, _, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
-
+	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{
+		Sort: gitlab.String("asc"), // oldest first as lassie should do one of the first comments
+	}
 	r, _ := regexp.Compile("^" + authorTag + ".*?")
 
-	for _, note := range notes {
-		if !note.System && r.MatchString(note.Body) {
-			return note
+	for {
+		notes, resp, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
+
+		for _, note := range notes {
+			if !note.System && r.MatchString(note.Body) {
+				return note
+			}
 		}
+
+		// Exit the loop when we've seen all pages
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		// Update the page number to get the next page
+		listMergeRequestNotesOptions.Page = resp.NextPage
 	}
 
 	return nil
