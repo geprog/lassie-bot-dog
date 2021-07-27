@@ -16,8 +16,6 @@ builds:
     goarch:
       - amd64
       - arm64
-      - ppc64le
-      - s390x
     env:
       - CGO_ENABLED=0
 archives:
@@ -39,13 +37,6 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-nfpms:
-  -
-    description: Lassie is a Gitlab bot which helps you with houskeeping
-    license: MIT License
-    formats:
-      - deb
-      - rpm
 dockers:
   -
     # GOOS of the built binary that should be used.
