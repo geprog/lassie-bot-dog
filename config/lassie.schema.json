@@ -22,7 +22,7 @@
               "type": "boolean"
             },
             "neededLabels": {
-              "description": "Labels needed for merge request being considered",
+              "description": "Labels needed for merge request to be ready for auto merging",
               "type": "array",
               "items": {
                 "type": "string"
