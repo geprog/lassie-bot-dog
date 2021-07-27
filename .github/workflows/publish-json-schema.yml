@@ -1,0 +1,25 @@
+name: Publish JSON schema
+on:
+  push:
+    paths:
+      - 'config/lassie.schema.json'
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.4
+
+      - name: Remove all files except lassie.schema.json
+        working-directory: config
+        run: find . -mindepth 1 -maxdepth 1 ! -name "lassie.schema.json" -delete
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: config
+          clean: false
