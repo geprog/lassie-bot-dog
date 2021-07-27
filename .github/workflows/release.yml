@@ -25,6 +25,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.0
+
+      - run: |
+         echo "Releasing version '${GITHUB_REF#refs/*/}'' ..."
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -38,3 +51,14 @@ jobs:
         with:
           name: lassie-bot-dog
           path: dist/*
+
+      - name: Update helm chart versions
+        run: |
+          sed -i "s/<version>/${GITHUB_REF#refs/*/}/g" charts/lassie-bot-dog/Chart.yaml
+          cat charts/lassie-bot-dog/Chart.yaml
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.2.1
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_RELEASE_NAME_TEMPLATE: "helm-{{ .Version }}"
