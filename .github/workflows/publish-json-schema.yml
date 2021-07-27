@@ -5,7 +5,9 @@ on:
       - 'config/lassie.schema.json'
     branches:
       - main
-      - json-schema
+  pull_request:
+    branches:
+    - main
 
 jobs:
   deploy:
