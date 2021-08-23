@@ -22,7 +22,7 @@ func (plugin IsTitleUsingConventionalCommit) Name() string {
 }
 
 func (plugin IsTitleUsingConventionalCommit) PassedText() string {
-	return "Your Merge-Request title is using conventional commit syntax](" + conventionalCommitSpecUrl + ")"
+	return "Your Merge-Request title is using [conventional commit syntax](" + conventionalCommitSpecUrl + ")"
 }
 
 func (plugin IsTitleUsingConventionalCommit) FailedText() string {
