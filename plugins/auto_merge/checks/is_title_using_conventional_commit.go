@@ -18,7 +18,7 @@ func (check IsTitleUsingConventionalCommit) Check(config *config.AutoMergeConfig
 }
 
 func (plugin IsTitleUsingConventionalCommit) Name() string {
-	return "is-not-work-in-progress"
+	return "is-title-using-conventional-commit"
 }
 
 func (plugin IsTitleUsingConventionalCommit) PassedText() string {
