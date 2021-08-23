@@ -29,7 +29,6 @@ func (plugin autoMergePlugin) Name() string {
 }
 
 func (plugin autoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
-
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
 		log.Debug("Can't load config", err)
@@ -82,10 +81,15 @@ func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
 	var mergeRequests []*gitlab.MergeRequest
 
-	lastCheck := *plugin.lastestChecks[project.ID]
+	lastCheck := plugin.lastestChecks[project.ID]
+
+	// if this is the first run => we don't need to get MRs with updated pipelines as we already checked all MRs
+	if lastCheck == nil {
+		return mergeRequests
+	}
 
 	opt := &gitlab.ListProjectPipelinesOptions{
-		UpdatedAfter: &lastCheck,
+		UpdatedAfter: lastCheck,
 		ListOptions: gitlab.ListOptions{
 			PerPage: 10,
 			Page:    1,
@@ -103,7 +107,7 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 				State:        gitlab.String("opened"),
 				SourceBranch: &pipeline.Ref,
 				ListOptions: gitlab.ListOptions{
-					PerPage: 10,
+					PerPage: 2,
 					Page:    1,
 				},
 			}
@@ -114,7 +118,7 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 			}
 
 			if len(_mergeRequests) < 1 {
-				log.Debug("No related merge-request not found")
+				log.Trace("No related merge-request not found")
 			} else {
 				// if one or more check all merge-requests
 				mergeRequests = append(mergeRequests, _mergeRequests...)
@@ -136,12 +140,12 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 func (plugin autoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
 	var mergeRequests []*gitlab.MergeRequest
 
-	lastCheck := *plugin.lastestChecks[project.ID]
+	lastCheck := plugin.lastestChecks[project.ID]
 
 	opt := &gitlab.ListProjectMergeRequestsOptions{
 		State: gitlab.String("opened"),
 		// TargetBranch: &project.DefaultBranch,
-		UpdatedAfter: &lastCheck,
+		UpdatedAfter: lastCheck,
 		ListOptions: gitlab.ListOptions{
 			PerPage: 10,
 			Page:    1,
