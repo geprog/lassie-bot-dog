@@ -8,7 +8,7 @@ import (
 )
 
 var conventionalCommitSpecUrl = "https://www.conventionalcommits.org/en/v1.0.0/#specification"
-var ConventionalCommitRegex = regexp.MustCompile(`^(feat|fix|docs|style|refactor|perf|test|chore)(?:\((.*)\))?(\!)?\: (.*)$`)
+var ConventionalCommitRegex = regexp.MustCompile(`^(build|chore|ci|feat|fix|perf|refactor|revert|style|test)(?:\((.*)\))?(\!)?\: (.*)$`)
 
 type IsTitleUsingConventionalCommit struct {
 }
