@@ -29,9 +29,9 @@ func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	comment := authorTag + "\n"
 
 	if status.merged {
-		comment = comment + ":dog: Thank you for your contribution. Always nice to have some helping hands :feet:"
+		comment = comment + ":dog: Thank you for your contribution. Always nice to have some helping hands :feet:\n"
 		comment = comment + "---\n"
-		comment = comment + "I am [Lassie](@lassie) :dog: and I help with some housekeeping tasks.\n"
+		comment = comment + "I am [Lassie](@lassie) :dog: and I help you with some housekeeping tasks.\n"
 	} else {
 		comment = comment + "### Your current merge request status is:\n\n"
 		for _, mergeCheck := range mergeChecks {
