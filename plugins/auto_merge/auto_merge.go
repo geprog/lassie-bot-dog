@@ -117,11 +117,10 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 				log.Debug("Can't load merge-requests", err)
 			}
 
-			if len(_mergeRequests) < 1 {
-				log.Trace("No related merge-request not found")
-			} else {
-				// if one or more check all merge-requests
+			if len(_mergeRequests) == 1 {
 				mergeRequests = append(mergeRequests, _mergeRequests...)
+			} else if len(_mergeRequests) > 1 {
+				log.Warn("Found more than one merge-request for your pipeline")
 			}
 		}
 
