@@ -3,6 +3,8 @@ package auto_merge
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/GEPROG/lassie-bot-dog/config"
@@ -90,6 +92,7 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 
 	opt := &gitlab.ListProjectPipelinesOptions{
 		UpdatedAfter: lastCheck,
+		Scope:        gitlab.String("finished"),
 		ListOptions: gitlab.ListOptions{
 			PerPage: 10,
 			Page:    1,
@@ -103,24 +106,19 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 		}
 
 		for _, pipeline := range pipelines {
-			optMR := &gitlab.ListProjectMergeRequestsOptions{
-				State:        gitlab.String("opened"),
-				SourceBranch: &pipeline.Ref,
-				ListOptions: gitlab.ListOptions{
-					PerPage: 2,
-					Page:    1,
-				},
-			}
-
-			_mergeRequests, _, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, optMR)
-			if err != nil {
-				log.Debug("Can't load merge-requests", err)
-			}
-
-			if len(_mergeRequests) == 1 {
-				mergeRequests = append(mergeRequests, _mergeRequests...)
-			} else if len(_mergeRequests) > 1 {
-				log.Warn("Found more than one merge-request for your pipeline")
+			// check if pipeline relates to MR and get corresponding MR
+			if IsRefMergeRequest(pipeline.Ref) {
+				mergeRequestIID, err := GetMergeRequestIdFromRef(pipeline.Ref)
+				if err != nil {
+					log.Debug("Can't get merge-request id from ref", err)
+					continue
+				}
+				mergeRequest, _, err := plugin.Client.MergeRequests.GetMergeRequest(project.ID, mergeRequestIID, &gitlab.GetMergeRequestsOptions{})
+				if err != nil {
+					log.Debug("Can't load merge-request", err)
+					continue
+				}
+				mergeRequests = append(mergeRequests, mergeRequest)
 			}
 		}
 
@@ -170,4 +168,21 @@ func (plugin autoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) [
 	}
 
 	return mergeRequests
+}
+
+func IsRefMergeRequest(ref string) bool {
+	return strings.HasPrefix(ref, "refs/merge-requests/")
+}
+
+func GetMergeRequestIdFromRef(ref string) (int, error) {
+	refID := ref
+	refID = strings.TrimPrefix(refID, "refs/merge-requests/")
+	refID = strings.TrimSuffix(refID, "/head")
+
+	mergeRequestIID, err := strconv.Atoi(refID)
+	if err != nil {
+		return -1, err
+	}
+
+	return mergeRequestIID, nil
 }
