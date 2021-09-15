@@ -4,6 +4,7 @@ description: A Helm chart for lassie the bot dog
 
 type: application
 
-version: 0.1.7
+version: <version>
 
-appVersion: "0.1.4"
+appVersion: "<version>"
+

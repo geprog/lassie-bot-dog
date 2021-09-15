@@ -72,5 +72,6 @@ func (plugin autoMergePlugin) setupMergeChecks() {
 		checks.PassesCICheck{
 			Client: plugin.Client,
 		},
+		checks.IsTitleUsingConventionalCommit{},
 	}
 }

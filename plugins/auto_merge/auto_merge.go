@@ -3,6 +3,8 @@ package auto_merge
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/GEPROG/lassie-bot-dog/config"
@@ -29,17 +31,6 @@ func (plugin autoMergePlugin) Name() string {
 }
 
 func (plugin autoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
-	opt := &gitlab.ListProjectMergeRequestsOptions{
-		State:        gitlab.String("opened"),
-		UpdatedAfter: plugin.lastestChecks[project.ID],
-		// TargetBranch: &project.DefaultBranch,
-		Labels: []string{"lassie-debug"},
-		ListOptions: gitlab.ListOptions{
-			PerPage: 10,
-			Page:    1,
-		},
-	}
-
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
 		log.Debug("Can't load config", err)
@@ -47,34 +38,16 @@ func (plugin autoMergePlugin) Execute(project *gitlab.Project, config config.Pro
 	}
 	log.Debugf("Loaded config: %+v", plugin.loadedConfig)
 
-	totalMergeRequests := 0
 	now := time.Now()
 
-	for {
-		// Get the first page with merge-requests
-		mergeRequests, resp, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
-		if err != nil {
-			log.Debug("Can't load merge-requests", err)
-		}
+	mergeRequests := plugin.getUpdatedMergeRequests(project)
+	mergeRequests = append(mergeRequests, plugin.getUpdatedPipelineMergeRequests(project)...)
 
-		log.Debugf("checking %d merge-requests ...\n", len(mergeRequests))
-
-		totalMergeRequests = totalMergeRequests + len(mergeRequests)
-
-		for _, mergeRequest := range mergeRequests {
-			plugin.autoMerge(project, mergeRequest)
-		}
-
-		// Exit the loop when we've seen all pages
-		if resp.CurrentPage >= resp.TotalPages {
-			break
-		}
-
-		// Update the page number to get the next page
-		opt.Page = resp.NextPage
+	for _, mergeRequest := range mergeRequests {
+		plugin.autoMerge(project, mergeRequest)
 	}
 
-	log.Debugf("checked total of %d merge-requests\n", totalMergeRequests)
+	log.Debugf("checked total of %d merge-requests\n", len(mergeRequests))
 
 	plugin.lastestChecks[project.ID] = &now
 }
@@ -105,4 +78,111 @@ func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 	}
 
 	plugin.updateStatusComment(project, mergedMergeRequest, status)
+}
+
+func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+	var mergeRequests []*gitlab.MergeRequest
+
+	lastCheck := plugin.lastestChecks[project.ID]
+
+	// if this is the first run => we don't need to get MRs with updated pipelines as we already checked all MRs
+	if lastCheck == nil {
+		return mergeRequests
+	}
+
+	opt := &gitlab.ListProjectPipelinesOptions{
+		UpdatedAfter: lastCheck,
+		Scope:        gitlab.String("finished"),
+		ListOptions: gitlab.ListOptions{
+			PerPage: 10,
+			Page:    1,
+		},
+	}
+
+	for {
+		pipelines, resp, err := plugin.Client.Pipelines.ListProjectPipelines(project.ID, opt)
+		if err != nil {
+			log.Debug("Can't load pipelines", err)
+		}
+
+		for _, pipeline := range pipelines {
+			// check if pipeline relates to MR and get corresponding MR
+			if IsRefMergeRequest(pipeline.Ref) {
+				mergeRequestIID, err := GetMergeRequestIdFromRef(pipeline.Ref)
+				if err != nil {
+					log.Debug("Can't get merge-request id from ref", err)
+					continue
+				}
+				mergeRequest, _, err := plugin.Client.MergeRequests.GetMergeRequest(project.ID, mergeRequestIID, &gitlab.GetMergeRequestsOptions{})
+				if err != nil {
+					log.Debug("Can't load merge-request", err)
+					continue
+				}
+				mergeRequests = append(mergeRequests, mergeRequest)
+			}
+		}
+
+		// Exit the loop when we've seen all pages
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		// Update the page number to get the next page
+		opt.Page = resp.NextPage
+	}
+
+	return mergeRequests
+}
+
+func (plugin autoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+	var mergeRequests []*gitlab.MergeRequest
+
+	lastCheck := plugin.lastestChecks[project.ID]
+
+	opt := &gitlab.ListProjectMergeRequestsOptions{
+		State: gitlab.String("opened"),
+		// TargetBranch: &project.DefaultBranch,
+		UpdatedAfter: lastCheck,
+		ListOptions: gitlab.ListOptions{
+			PerPage: 10,
+			Page:    1,
+		},
+	}
+
+	for {
+		// Get the first page with merge-requests
+		_mergeRequests, resp, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
+		if err != nil {
+			log.Debug("Can't load merge-requests", err)
+		}
+
+		mergeRequests = append(mergeRequests, _mergeRequests...)
+
+		// Exit the loop when we've seen all pages
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		// Update the page number to get the next page
+		opt.Page = resp.NextPage
+	}
+
+	return mergeRequests
+}
+
+func IsRefMergeRequest(ref string) bool {
+	return strings.HasPrefix(ref, "refs/merge-requests/")
+}
+
+func GetMergeRequestIdFromRef(ref string) (int, error) {
+	refID := ref
+	refID = strings.TrimPrefix(refID, "refs/merge-requests/")
+	refID = strings.TrimSuffix(refID, "/head")
+
+	mergeRequestIID, err := strconv.Atoi(refID)
+	if err != nil {
+		return -1, err
+	}
+
+	return mergeRequestIID, nil
 }

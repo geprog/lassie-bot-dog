@@ -29,9 +29,9 @@ func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	comment := authorTag + "\n"
 
 	if status.merged {
-		comment = comment + ":dog: Thank you for your contribution. Always nice to have some helping hands :feet:"
+		comment = comment + ":dog: Thank you for your contribution. Always nice to have some helping hands :feet:\n"
 		comment = comment + "---\n"
-		comment = comment + "I am [Lassie](@lassie) :dog: and I help with some housekeeping tasks.\n"
+		comment = comment + "I am [Lassie](@lassie) :dog: and I help you with some housekeeping tasks.\n"
 	} else {
 		comment = comment + "### Your current merge request status is:\n\n"
 		for _, mergeCheck := range mergeChecks {
@@ -52,15 +52,27 @@ func (plugin autoMergePlugin) updateStatusComment(project *gitlab.Project, merge
 }
 
 func (plugin autoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
-	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{}
-	notes, _, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
-
+	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{
+		Sort: gitlab.String("asc"), // oldest first as lassie should do one of the first comments
+	}
 	r, _ := regexp.Compile("^" + authorTag + ".*?")
 
-	for _, note := range notes {
-		if !note.System && r.MatchString(note.Body) {
-			return note
+	for {
+		notes, resp, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
+
+		for _, note := range notes {
+			if !note.System && r.MatchString(note.Body) {
+				return note
+			}
 		}
+
+		// Exit the loop when we've seen all pages
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		// Update the page number to get the next page
+		listMergeRequestNotesOptions.Page = resp.NextPage
 	}
 
 	return nil
