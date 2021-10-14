@@ -29,6 +29,34 @@
               },
               "minItems": 1,
               "uniqueItems": true
+            },
+            "neededApprovals": {
+              "description": "Require specific users to approve if a merge-request has specific labels",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["users", "label"],
+                "properties": {
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "atLeast": {
+                    "type": "number"
+                  }
+                }
+              },
+              "minItems": 1,
+              "uniqueItems": true
             }
           }
         }

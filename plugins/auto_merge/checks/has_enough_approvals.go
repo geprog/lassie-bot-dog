@@ -27,20 +27,24 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 		missingApprovalForLabels = make(map[int][]string)
 	}
 
-	missingApprovalForLabels[mergeRequest.ID] = nil
+	missingApprovalForLabels[mergeRequest.ID] = []string{}
 
 	for _, neededApproval := range config.NeededApprovals {
-		// check if this MR has the label to check approvals for (empty label means wildcard => check for every MR)
-		if neededApproval.Label != "" && !utils.StringInSlice(neededApproval.Label, mergeRequest.Labels) {
+		// skip (don't require approval) if the label does not exists on the MR and the required label is not a wildcard (always check)
+		if !utils.StringInSlice(neededApproval.Label, mergeRequest.Labels) && neededApproval.Label != "*" {
 			continue
 		}
 
-		approvedBy := check.getApprovals(approvals.ApprovedBy, neededApproval.Users)
+		// get amount of users which are allowed to approve and already approved
+		approvedBy := len(check.getApprovals(approvals.ApprovedBy, neededApproval.Users))
+		atLeast := utils.Min(neededApproval.AtLeast, 1)
 
-		if len(approvedBy) < neededApproval.AtLeast {
-			label := neededApproval.Label
-
-			missingApprovalForLabels[mergeRequest.ID] = append(missingApprovalForLabels[mergeRequest.ID], fmt.Sprintf("~\"%s\"", label))
+		if approvedBy < atLeast {
+			label := fmt.Sprintf("~\"%s\"", neededApproval.Label)
+			if neededApproval.Label == "*" {
+				label = "`*`"
+			}
+			missingApprovalForLabels[mergeRequest.ID] = append(missingApprovalForLabels[mergeRequest.ID], label)
 		}
 	}
 

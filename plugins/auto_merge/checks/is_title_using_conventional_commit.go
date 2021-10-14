@@ -21,10 +21,10 @@ func (plugin IsTitleUsingConventionalCommit) Name() string {
 	return "is-title-using-conventional-commit"
 }
 
-func (plugin IsTitleUsingConventionalCommit) PassedText() string {
+func (plugin IsTitleUsingConventionalCommit) PassedText(mergeRequestId int) string {
 	return "Your Merge-Request title is using [conventional commit syntax](" + conventionalCommitSpecUrl + ")"
 }
 
-func (plugin IsTitleUsingConventionalCommit) FailedText() string {
+func (plugin IsTitleUsingConventionalCommit) FailedText(mergeRequestId int) string {
 	return "Your Merge-Request is NOT using [conventional commit syntax](" + conventionalCommitSpecUrl + ")"
 }
