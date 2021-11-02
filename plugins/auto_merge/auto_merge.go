@@ -13,24 +13,24 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-type autoMergePlugin struct {
+type AutoMergePlugin struct {
 	lastestChecks map[int]*time.Time
 	loadedConfig  *autoMergeConfig.AutoMergeConfig
 	Client        *gitlab.Client
 }
 
-func NewAutoMergePlugin(client *gitlab.Client) *autoMergePlugin {
-	return &autoMergePlugin{
+func NewAutoMergePlugin(client *gitlab.Client) *AutoMergePlugin {
+	return &AutoMergePlugin{
 		lastestChecks: make(map[int]*time.Time),
 		Client:        client,
 	}
 }
 
-func (plugin autoMergePlugin) Name() string {
+func (plugin AutoMergePlugin) Name() string {
 	return "auto_merge"
 }
 
-func (plugin autoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
+func (plugin AutoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
 		log.Debug("Can't load config", err)
@@ -52,7 +52,7 @@ func (plugin autoMergePlugin) Execute(project *gitlab.Project, config config.Pro
 	plugin.lastestChecks[project.ID] = &now
 }
 
-func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
+func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
 	log.Debug("trying to auto merge >>>", mergeRequest.Title)
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
@@ -80,7 +80,7 @@ func (plugin autoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 	plugin.updateStatusComment(project, mergedMergeRequest, status)
 }
 
-func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+func (plugin AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
 	var mergeRequests []*gitlab.MergeRequest
 
 	lastCheck := plugin.lastestChecks[project.ID]
@@ -108,7 +108,7 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 		for _, pipeline := range pipelines {
 			// check if pipeline relates to MR and get corresponding MR
 			if IsRefMergeRequest(pipeline.Ref) {
-				mergeRequestIID, err := GetMergeRequestIdFromRef(pipeline.Ref)
+				mergeRequestIID, err := GetMergeRequestIDFromRef(pipeline.Ref)
 				if err != nil {
 					log.Debug("Can't get merge-request id from ref", err)
 					continue
@@ -134,7 +134,7 @@ func (plugin autoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 	return mergeRequests
 }
 
-func (plugin autoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+func (plugin AutoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
 	var mergeRequests []*gitlab.MergeRequest
 
 	lastCheck := plugin.lastestChecks[project.ID]
@@ -174,7 +174,7 @@ func IsRefMergeRequest(ref string) bool {
 	return strings.HasPrefix(ref, "refs/merge-requests/")
 }
 
-func GetMergeRequestIdFromRef(ref string) (int, error) {
+func GetMergeRequestIDFromRef(ref string) (int, error) {
 	refID := ref
 	refID = strings.TrimPrefix(refID, "refs/merge-requests/")
 	refID = strings.TrimSuffix(refID, "/head")

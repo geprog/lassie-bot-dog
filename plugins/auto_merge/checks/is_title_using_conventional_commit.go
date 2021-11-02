@@ -7,7 +7,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-var conventionalCommitSpecUrl = "https://www.conventionalcommits.org/en/v1.0.0/#specification"
+var conventionalCommitSpecURL = "https://www.conventionalcommits.org/en/v1.0.0/#specification"
 var ConventionalCommitRegex = regexp.MustCompile(`^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(?:\((.*)\))?(\!)?\: (.*)$`)
 
 type IsTitleUsingConventionalCommit struct {
@@ -17,14 +17,14 @@ func (check IsTitleUsingConventionalCommit) Check(config *config.AutoMergeConfig
 	return ConventionalCommitRegex.MatchString(mergeRequest.Title)
 }
 
-func (plugin IsTitleUsingConventionalCommit) Name() string {
+func (check IsTitleUsingConventionalCommit) Name() string {
 	return "is-title-using-conventional-commit"
 }
 
-func (plugin IsTitleUsingConventionalCommit) PassedText() string {
-	return "Your Merge-Request title is using [conventional commit syntax](" + conventionalCommitSpecUrl + ")"
+func (check IsTitleUsingConventionalCommit) PassedText() string {
+	return "Your Merge-Request title is using [conventional commit syntax](" + conventionalCommitSpecURL + ")"
 }
 
-func (plugin IsTitleUsingConventionalCommit) FailedText() string {
-	return "Your Merge-Request is NOT using [conventional commit syntax](" + conventionalCommitSpecUrl + ")"
+func (check IsTitleUsingConventionalCommit) FailedText() string {
+	return "Your Merge-Request is NOT using [conventional commit syntax](" + conventionalCommitSpecURL + ")"
 }

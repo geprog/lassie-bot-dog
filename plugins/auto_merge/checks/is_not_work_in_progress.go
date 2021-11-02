@@ -12,14 +12,14 @@ func (check IsNotWorkInProgressCheck) Check(config *config.AutoMergeConfig, proj
 	return !mergeRequest.WorkInProgress
 }
 
-func (plugin IsNotWorkInProgressCheck) Name() string {
+func (check IsNotWorkInProgressCheck) Name() string {
 	return "is-not-work-in-progress"
 }
 
-func (plugin IsNotWorkInProgressCheck) PassedText() string {
+func (check IsNotWorkInProgressCheck) PassedText() string {
 	return "Your Merge-Request is marked as ready (no WIP-prefix)"
 }
 
-func (plugin IsNotWorkInProgressCheck) FailedText() string {
+func (check IsNotWorkInProgressCheck) FailedText() string {
 	return "Your Merge-Request is not ready yet (marked with WIP-prefix)"
 }

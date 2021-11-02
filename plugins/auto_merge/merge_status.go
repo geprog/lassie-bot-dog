@@ -25,7 +25,7 @@ func encodeMergeCheckStatus(mergeCheck mergeCheck, status *mergeStatus) string {
 	return ""
 }
 
-func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
+func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	comment := authorTag + "\n"
 
 	if status.merged {
@@ -45,13 +45,13 @@ func (plugin autoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	return strings.TrimSuffix(comment, "\n")
 }
 
-func (plugin autoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
+func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
 	note := plugin.getStatusComment(project, mergeRequest)
 	comment := plugin.encodeMergeStatus(status)
 	plugin.saveStatusComment(project, mergeRequest, comment, note)
 }
 
-func (plugin autoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
+func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
 	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{
 		Sort: gitlab.String("asc"), // oldest first as lassie should do one of the first comments
 	}
@@ -78,7 +78,7 @@ func (plugin autoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 	return nil
 }
 
-func (plugin autoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
+func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
 	log.Trace("comment", comment)
 
 	// update existing note
@@ -91,7 +91,10 @@ func (plugin autoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 		updateMergeRequestNoteOptions := &gitlab.UpdateMergeRequestNoteOptions{
 			Body: gitlab.String(comment),
 		}
-		plugin.Client.Notes.UpdateMergeRequestNote(project.ID, mergeRequest.IID, note.ID, updateMergeRequestNoteOptions)
+		_, _, err := plugin.Client.Notes.UpdateMergeRequestNote(project.ID, mergeRequest.IID, note.ID, updateMergeRequestNoteOptions)
+		if err != nil {
+			log.Error("Failed to update merge request note")
+		}
 
 		log.Debug("update comment")
 
@@ -101,7 +104,10 @@ func (plugin autoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 	createMergeRequestNoteOptions := &gitlab.CreateMergeRequestNoteOptions{
 		Body: gitlab.String(comment),
 	}
-	plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
+	_, _, err := plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
+	if err != nil {
+		log.Error("Failed to create merge request note")
+	}
 
 	log.Debug("create comment")
 }

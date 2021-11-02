@@ -78,8 +78,12 @@ func main() {
 
 	s := gocron.NewScheduler(time.UTC)
 	s.SetMaxConcurrentJobs(1, gocron.RescheduleMode)
-	s.Every(updateInterval).Seconds().Do(func() {
+	_, err = s.Every(updateInterval).Seconds().Do(func() {
 		loop(client)
 	})
+	if err != nil {
+		log.Fatal("Failed to start gocron")
+	}
+
 	s.StartBlocking()
 }
