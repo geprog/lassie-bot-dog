@@ -1,36 +1,43 @@
-
-name: Go
-
+name: golangci-lint
 on:
-  pull_request:
-    branches:
-    - main
   push:
     branches:
-    - main
-
+      - main
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+  # Optional: allow read access to pull request. Use with `only-new-issues` option.
+  # pull-requests: read
 jobs:
-  build:
-    name: Test on Go ${{ matrix.go-version }} and ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        go-version: [1.16.x]
-        os: [ubuntu-latest]
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
     steps:
-      - name: Set up Go ${{ matrix.go-version }} on ${{ matrix.os }}
-        uses: actions/setup-go@v1
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
         with:
-          go-version: ${{ matrix.go-version }}
-        id: go
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: v1.42.1
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+          # Optional: working directory, useful for monorepos
+          # working-directory: somedir
 
-      - name: Build on ${{ matrix.os }}
-        env:
-          GO111MODULE: on
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.21.0
-          $(go env GOPATH)/bin/golangci-lint run --timeout=5m --config ./.golangci.yml
-          go test -v -race ./...
+          # Optional: golangci-lint command line arguments.
+          # args: --issues-exit-code=0
+
+          # Optional: show only new issues if it's a pull request. The default value is `false`.
+          # only-new-issues: true
+
+          # Optional: if set to true then the action will use pre-installed Go.
+          # skip-go-installation: true
+
+          # Optional: if set to true then the action don't cache or restore ~/go/pkg.
+          # skip-pkg-cache: true
+
+          # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
+          # skip-build-cache: true

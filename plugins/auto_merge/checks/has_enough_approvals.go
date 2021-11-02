@@ -21,14 +21,14 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 	return len(approvals.ApprovedBy) >= 1
 }
 
-func (plugin HasEnoughApprovalsCheck) Name() string {
+func (check HasEnoughApprovalsCheck) Name() string {
 	return "has-enough-approvals"
 }
 
-func (plugin HasEnoughApprovalsCheck) PassedText() string {
+func (check HasEnoughApprovalsCheck) PassedText() string {
 	return "Enough reviewers liked your changes"
 }
 
-func (plugin HasEnoughApprovalsCheck) FailedText() string {
+func (check HasEnoughApprovalsCheck) FailedText() string {
 	return "You still need some review for your changes"
 }

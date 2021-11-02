@@ -20,13 +20,13 @@ func TestIsRefMergeRequest(t *testing.T) {
 
 func TestGetMergeRequestIdFromRef(t *testing.T) {
 	ref := "refs/merge-requests/50/head"
-	mergeRequestIID, err := auto_merge.GetMergeRequestIdFromRef(ref)
+	mergeRequestIID, err := auto_merge.GetMergeRequestIDFromRef(ref)
 	if mergeRequestIID != 50 || err != nil {
 		t.Error()
 	}
 
 	ref = "refs/main"
-	mergeRequestIID, err = auto_merge.GetMergeRequestIdFromRef(ref)
+	mergeRequestIID, err = auto_merge.GetMergeRequestIDFromRef(ref)
 	if mergeRequestIID != -1 || err == nil {
 		t.Error()
 	}
