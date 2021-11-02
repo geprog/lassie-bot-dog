@@ -28,7 +28,7 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
-      - name: Build on ${{ matrix.os }}
+      - name: Test on ${{ matrix.os }}
         env:
           GO111MODULE: on
         run: |
