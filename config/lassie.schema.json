@@ -48,10 +48,12 @@
                   },
                   "label": {
                     "type": "string",
+                    "description": "Name of the label which requires specific users to approve. Hint: `*` can be used as wildcard to match any or no labels to require specific users to always approve.",
                     "minLength": 1
                   },
                   "atLeast": {
-                    "type": "number"
+                    "type": "integer",
+                    "minimum": 1
                   }
                 }
               },
