@@ -51,11 +51,11 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 	return len(missingApprovalForLabels[mergeRequest.ID]) == 0
 }
 
-func (plugin HasEnoughApprovalsCheck) Name() string {
+func (check HasEnoughApprovalsCheck) Name() string {
 	return "has-enough-approvals"
 }
 
-func (plugin HasEnoughApprovalsCheck) PassedText(mergeRequestId int) string {
+func (check HasEnoughApprovalsCheck) PassedText(mergeRequestId int) string {
 	return "Enough reviewers liked your changes"
 }
 
@@ -64,7 +64,7 @@ func (plugin HasEnoughApprovalsCheck) FailedText(mergeRequestId int) string {
 	return fmt.Sprintf("You still need some review for your changes %s", missingLabels)
 }
 
-func (plugin HasEnoughApprovalsCheck) getApprovals(approvedByAll []*gitlab.MergeRequestApproverUser, possibleApprovers []string) []string {
+func (check HasEnoughApprovalsCheck) getApprovals(approvedByAll []*gitlab.MergeRequestApproverUser, possibleApprovers []string) []string {
 	var approvedBy []string
 
 	for _, approver := range approvedByAll {

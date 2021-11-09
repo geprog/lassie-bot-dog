@@ -27,7 +27,7 @@ type mergeStatus struct {
 	allChecksPassed bool
 }
 
-func (plugin autoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
+func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
 	// TODO: find better place to load this
 	plugin.setupMergeChecks()
 
@@ -56,7 +56,7 @@ func (plugin autoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 	return status
 }
 
-func (plugin autoMergePlugin) setupMergeChecks() {
+func (plugin AutoMergePlugin) setupMergeChecks() {
 	if mergeChecks != nil {
 		return
 	}

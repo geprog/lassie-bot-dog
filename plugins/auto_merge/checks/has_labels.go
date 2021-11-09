@@ -18,19 +18,19 @@ func (check HasRequiredLabelsCheck) Check(config *config.AutoMergeConfig, projec
 	return true
 }
 
-func (plugin HasRequiredLabelsCheck) Name() string {
+func (check HasRequiredLabelsCheck) Name() string {
 	return "has-labels"
 }
 
-func (plugin HasRequiredLabelsCheck) PassedText(mergeRequestId int) string {
+func (check HasRequiredLabelsCheck) PassedText(mergeRequestId int) string {
 	return "Your Merge-Request has all required labels"
 }
 
-func (plugin HasRequiredLabelsCheck) FailedText(mergeRequestId int) string {
+func (check HasRequiredLabelsCheck) FailedText(mergeRequestId int) string {
 	return "Your Merge-Request is missing some required labels" // TODO list missing labels
 }
 
-func (plugin HasRequiredLabelsCheck) hasMergeRequestLabel(mergeRequest *gitlab.MergeRequest, searchedLabel string) bool {
+func (check HasRequiredLabelsCheck) hasMergeRequestLabel(mergeRequest *gitlab.MergeRequest, searchedLabel string) bool {
 	for _, label := range mergeRequest.Labels {
 		if searchedLabel == label {
 			return true

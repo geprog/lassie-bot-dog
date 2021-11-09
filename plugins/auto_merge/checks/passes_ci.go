@@ -21,14 +21,14 @@ func (check PassesCICheck) Check(config *config.AutoMergeConfig, project *gitlab
 	return len(pipelines) > 0 && pipelines[0].Status == "success"
 }
 
-func (plugin PassesCICheck) Name() string {
+func (check PassesCICheck) Name() string {
 	return "passes-ci"
 }
 
-func (plugin PassesCICheck) PassedText(mergeRequestId int) string {
+func (check PassesCICheck) PassedText(mergeRequestId int) string {
 	return "A pipline successfully tested your changes"
 }
 
-func (plugin PassesCICheck) FailedText(mergeRequestId int) string {
+func (check PassesCICheck) FailedText(mergeRequestId int) string {
 	return "A pipeline detected some errors with your changes"
 }
