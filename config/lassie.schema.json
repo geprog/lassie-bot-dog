@@ -29,6 +29,36 @@
               },
               "minItems": 1,
               "uniqueItems": true
+            },
+            "neededApprovals": {
+              "description": "Require specific users to approve if a merge-request has specific labels",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["users", "label"],
+                "properties": {
+                  "users": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Name of the label which requires specific users to approve. Hint: `*` can be used as wildcard to require specific users to always approve regardless of labels.",
+                    "minLength": 1
+                  },
+                  "atLeast": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              "minItems": 1,
+              "uniqueItems": true
             }
           }
         }

@@ -14,11 +14,11 @@ func encodeMergeCheckStatus(mergeCheck mergeCheck, status *mergeStatus) string {
 	for _, mergeCheckResult := range status.checkResults {
 		if mergeCheckResult.mergeCheckName == mergeCheck.Name() {
 			if mergeCheckResult.mergeCheckPassed {
-				return "- :green_heart: " + mergeCheck.PassedText() + "\n"
+				return "- :green_heart: " + mergeCheck.PassedText(status.mergeRequestID) + "\n"
 			}
 
 			// :collision: :exclamation:
-			return "- :poop: " + mergeCheck.FailedText() + "\n"
+			return "- :poop: " + mergeCheck.FailedText(status.mergeRequestID) + "\n"
 		}
 	}
 

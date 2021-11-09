@@ -16,10 +16,10 @@ func (check HasNoConflictsCheck) Name() string {
 	return "has-conflicts"
 }
 
-func (check HasNoConflictsCheck) PassedText() string {
+func (check HasNoConflictsCheck) PassedText(mergeRequestID int) string {
 	return "Your changes do not have conflicts with the target branch."
 }
 
-func (check HasNoConflictsCheck) FailedText() string {
+func (check HasNoConflictsCheck) FailedText(mergeRequestID int) string {
 	return "Your changes have some conflicts with the target branch"
 }

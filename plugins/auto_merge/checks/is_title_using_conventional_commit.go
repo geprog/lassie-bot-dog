@@ -21,10 +21,10 @@ func (check IsTitleUsingConventionalCommit) Name() string {
 	return "is-title-using-conventional-commit"
 }
 
-func (check IsTitleUsingConventionalCommit) PassedText() string {
+func (check IsTitleUsingConventionalCommit) PassedText(mergeRequestID int) string {
 	return "Your Merge-Request title is using [conventional commit syntax](" + conventionalCommitSpecURL + ")"
 }
 
-func (check IsTitleUsingConventionalCommit) FailedText() string {
+func (check IsTitleUsingConventionalCommit) FailedText(mergeRequestID int) string {
 	return "Your Merge-Request is NOT using [conventional commit syntax](" + conventionalCommitSpecURL + ")"
 }

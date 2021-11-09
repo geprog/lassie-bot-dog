@@ -25,10 +25,10 @@ func (check PassesCICheck) Name() string {
 	return "passes-ci"
 }
 
-func (check PassesCICheck) PassedText() string {
+func (check PassesCICheck) PassedText(mergeRequestID int) string {
 	return "A pipline successfully tested your changes"
 }
 
-func (check PassesCICheck) FailedText() string {
+func (check PassesCICheck) FailedText(mergeRequestID int) string {
 	return "A pipeline detected some errors with your changes"
 }

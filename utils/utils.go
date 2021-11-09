@@ -8,3 +8,10 @@ func StringInSlice(a string, list []string) bool {
 	}
 	return false
 }
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
