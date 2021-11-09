@@ -9,7 +9,7 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
-func Min(a, b int) int {
+func Max(a, b int) int {
 	if a > b {
 		return a
 	}

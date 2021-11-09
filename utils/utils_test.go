@@ -7,15 +7,15 @@ import (
 )
 
 func TestMin(t *testing.T) {
-	if utils.Min(7, 1) != 7 {
+	if utils.Max(7, 1) != 7 {
 		t.Error()
 	}
 
-	if utils.Min(5, 99) != 99 {
+	if utils.Max(5, 99) != 99 {
 		t.Error()
 	}
 
-	if utils.Min(3, 3) != 3 {
+	if utils.Max(3, 3) != 3 {
 		t.Error()
 	}
 }

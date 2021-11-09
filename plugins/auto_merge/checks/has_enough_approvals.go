@@ -37,7 +37,7 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 
 		// get amount of users that need to approve and already approved
 		approvedBy := len(check.getApprovals(approvals.ApprovedBy, neededApproval.Users))
-		atLeast := utils.Min(neededApproval.AtLeast, 1)
+		atLeast := utils.Max(neededApproval.AtLeast, 1)
 
 		if approvedBy < atLeast {
 			label := fmt.Sprintf("~\"%s\"", neededApproval.Label)
