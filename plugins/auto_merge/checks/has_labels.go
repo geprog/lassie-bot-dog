@@ -22,11 +22,11 @@ func (check HasRequiredLabelsCheck) Name() string {
 	return "has-labels"
 }
 
-func (check HasRequiredLabelsCheck) PassedText(mergeRequestId int) string {
+func (check HasRequiredLabelsCheck) PassedText(mergeRequestID int) string {
 	return "Your Merge-Request has all required labels"
 }
 
-func (check HasRequiredLabelsCheck) FailedText(mergeRequestId int) string {
+func (check HasRequiredLabelsCheck) FailedText(mergeRequestID int) string {
 	return "Your Merge-Request is missing some required labels" // TODO list missing labels
 }
 

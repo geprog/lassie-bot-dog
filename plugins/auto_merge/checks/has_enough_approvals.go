@@ -35,7 +35,7 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 			continue
 		}
 
-		// get amount of users which are allowed to approve and already approved
+		// get amount of users that need to approve and already approved
 		approvedBy := len(check.getApprovals(approvals.ApprovedBy, neededApproval.Users))
 		atLeast := utils.Min(neededApproval.AtLeast, 1)
 
@@ -55,12 +55,12 @@ func (check HasEnoughApprovalsCheck) Name() string {
 	return "has-enough-approvals"
 }
 
-func (check HasEnoughApprovalsCheck) PassedText(mergeRequestId int) string {
+func (check HasEnoughApprovalsCheck) PassedText(mergeRequestID int) string {
 	return "Enough reviewers liked your changes"
 }
 
-func (plugin HasEnoughApprovalsCheck) FailedText(mergeRequestId int) string {
-	missingLabels := strings.Join(missingApprovalForLabels[mergeRequestId], ", ")
+func (check HasEnoughApprovalsCheck) FailedText(mergeRequestID int) string {
+	missingLabels := strings.Join(missingApprovalForLabels[mergeRequestID], ", ")
 	return fmt.Sprintf("You still need some review for your changes %s", missingLabels)
 }
 

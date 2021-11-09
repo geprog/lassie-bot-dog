@@ -16,10 +16,10 @@ func (check HasNoOpenDiscussionsCheck) Name() string {
 	return "has-no-open-discussions"
 }
 
-func (check HasNoOpenDiscussionsCheck) PassedText(mergeRequestId int) string {
+func (check HasNoOpenDiscussionsCheck) PassedText(mergeRequestID int) string {
 	return "All discussions about your changes have been resolved"
 }
 
-func (check HasNoOpenDiscussionsCheck) FailedText(mergeRequestId int) string {
+func (check HasNoOpenDiscussionsCheck) FailedText(mergeRequestID int) string {
 	return "There are still some ongoing discussions about your changes"
 }
