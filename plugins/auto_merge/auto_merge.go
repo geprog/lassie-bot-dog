@@ -14,9 +14,10 @@ import (
 )
 
 type AutoMergePlugin struct {
-	lastestChecks map[int]*time.Time
-	loadedConfig  *autoMergeConfig.AutoMergeConfig
-	Client        *gitlab.Client
+	latestFullCheck *time.Time
+	lastestChecks   map[int]*time.Time
+	loadedConfig    *autoMergeConfig.AutoMergeConfig
+	Client          *gitlab.Client
 }
 
 func NewAutoMergePlugin(client *gitlab.Client) *AutoMergePlugin {
@@ -26,11 +27,11 @@ func NewAutoMergePlugin(client *gitlab.Client) *AutoMergePlugin {
 	}
 }
 
-func (plugin AutoMergePlugin) Name() string {
+func (plugin *AutoMergePlugin) Name() string {
 	return "auto_merge"
 }
 
-func (plugin AutoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
+func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
 		log.Debug("Can't load config", err)
@@ -40,19 +41,25 @@ func (plugin AutoMergePlugin) Execute(project *gitlab.Project, config config.Pro
 
 	now := time.Now()
 
-	mergeRequests := plugin.getUpdatedMergeRequests(project)
-	mergeRequests = append(mergeRequests, plugin.getUpdatedPipelineMergeRequests(project)...)
+	mergeRequests := []*gitlab.MergeRequest{}
+
+	if plugin.latestFullCheck == nil || plugin.latestFullCheck.Add(time.Minute*5).Before(now) {
+		mergeRequests = append(mergeRequests, plugin.getMergeRequests(project, nil)...)
+		plugin.latestFullCheck = &now
+	} else {
+		mergeRequests = append(mergeRequests, plugin.getUpdatedMergeRequests(project)...)
+		mergeRequests = append(mergeRequests, plugin.getUpdatedPipelineMergeRequests(project)...)
+		plugin.lastestChecks[project.ID] = &now
+	}
 
 	for _, mergeRequest := range mergeRequests {
 		plugin.autoMerge(project, mergeRequest)
 	}
 
 	log.Debugf("checked total of %d merge-requests\n", len(mergeRequests))
-
-	plugin.lastestChecks[project.ID] = &now
 }
 
-func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
+func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
 	log.Debug("trying to auto merge >>>", mergeRequest.Title)
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
@@ -80,7 +87,7 @@ func (plugin AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *g
 	plugin.updateStatusComment(project, mergedMergeRequest, status)
 }
 
-func (plugin AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
 	var mergeRequests []*gitlab.MergeRequest
 
 	lastCheck := plugin.lastestChecks[project.ID]
@@ -134,10 +141,8 @@ func (plugin AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Pr
 	return mergeRequests
 }
 
-func (plugin AutoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+func (plugin *AutoMergePlugin) getMergeRequests(project *gitlab.Project, lastCheck *time.Time) []*gitlab.MergeRequest {
 	var mergeRequests []*gitlab.MergeRequest
-
-	lastCheck := plugin.lastestChecks[project.ID]
 
 	opt := &gitlab.ListProjectMergeRequestsOptions{
 		State: gitlab.String("opened"),
@@ -168,6 +173,12 @@ func (plugin AutoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) [
 	}
 
 	return mergeRequests
+}
+
+func (plugin *AutoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+	lastCheck := plugin.lastestChecks[project.ID]
+
+	return plugin.getMergeRequests(project, lastCheck)
 }
 
 func IsRefMergeRequest(ref string) bool {
