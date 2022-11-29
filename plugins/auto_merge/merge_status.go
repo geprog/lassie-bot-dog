@@ -46,23 +46,31 @@ func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 }
 
 func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
-	note := plugin.getStatusComment(project, mergeRequest)
+	note, err := plugin.getStatusComment(project, mergeRequest)
+	if err != nil {
+		log.Error("Failed to get status comment: ", err)
+		return
+	}
 	comment := plugin.encodeMergeStatus(status)
 	plugin.saveStatusComment(project, mergeRequest, comment, note)
 }
 
-func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *gitlab.Note {
+func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) (*gitlab.Note, error) {
 	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{
 		Sort: gitlab.String("asc"), // oldest first as lassie should do one of the first comments
 	}
 	r, _ := regexp.Compile("^" + authorTag + ".*?")
 
 	for {
-		notes, resp, _ := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
+		notes, resp, err := plugin.Client.Notes.ListMergeRequestNotes(project.ID, mergeRequest.IID, listMergeRequestNotesOptions)
+
+		if err != nil {
+			return nil, err
+		}
 
 		for _, note := range notes {
 			if !note.System && r.MatchString(note.Body) {
-				return note
+				return note, nil
 			}
 		}
 
@@ -75,7 +83,7 @@ func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 		listMergeRequestNotesOptions.Page = resp.NextPage
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
