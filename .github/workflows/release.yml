@@ -42,10 +42,11 @@ jobs:
           echo "Releasing version '${GITHUB_REF#refs/*/}'' ..."
 
       - name: Run GoReleaser
+        if: github.event_name != 'pull_request'
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: ${{ github.event_name == 'pull_request' && 'build --rm-dist' || 'release --rm-dist' }} # don't push on PRs
+          args: ${{ github.event_name == 'pull_request' && 'build --clean' || 'release --clean' }} # don't push on PRs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
