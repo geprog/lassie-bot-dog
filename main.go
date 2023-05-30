@@ -17,26 +17,41 @@ var loadedPlugins []plugins.Plugin
 func loop(client *gitlab.Client) {
 	log.Debug("Starting plugin loop ...")
 
-	p := &gitlab.ListProjectsOptions{}
-	projects, _, err := client.Projects.ListProjects(p)
-	if err != nil {
-		log.Debugf("Failed to receive project list: %v", err)
-		return
+	listProjectsOptions := &gitlab.ListProjectsOptions{
+		// Search: gitlab.String("lassie-test"),
+		Membership: gitlab.Bool(true), // only list projects that lassie is a member of
+		Sort:       gitlab.String("asc"),
 	}
 
-	for _, project := range projects {
-		config := config.LoadConfig(client, project)
-		if config == nil {
-			log.Debugf("No project config found for %s", project.PathWithNamespace)
-			continue
+	for {
+		projects, resp, err := client.Projects.ListProjects(listProjectsOptions)
+		if err != nil {
+			log.Debugf("Failed to receive project list: %v", err)
+			return
 		}
 
-		log.Debugf("Found Lassie config for %s", project.PathWithNamespace)
+		for _, project := range projects {
+			config := config.LoadConfig(client, project)
+			if config == nil {
+				log.Debugf("No project config found for %s", project.PathWithNamespace)
+				continue
+			}
 
-		for _, plugin := range loadedPlugins {
-			log.Debugf("Running plugin '%s' on project '%s'", plugin.Name(), project.PathWithNamespace)
-			plugin.Execute(project, *config)
+			log.Debugf("Found Lassie config for %s", project.PathWithNamespace)
+
+			for _, plugin := range loadedPlugins {
+				log.Debugf("Running plugin '%s' on project '%s'", plugin.Name(), project.PathWithNamespace)
+				plugin.Execute(project, *config)
+			}
 		}
+
+		// Exit the loop when we've seen all pages
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		// Update the page number to get the next page
+		listProjectsOptions.Page = resp.NextPage
 	}
 }
 
