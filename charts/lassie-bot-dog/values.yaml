@@ -10,7 +10,7 @@ gitlab:
 
 image:
   pullPolicy: IfNotPresent
-  repository: "geprog/lassie-bot-dog"
+  repository: "ghcr.io/geprog/lassie-bot-dog"
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
@@ -29,10 +29,12 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -40,7 +42,8 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
