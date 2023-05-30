@@ -55,7 +55,7 @@ func (check HasEnoughApprovalsCheck) Name() string {
 	return "has-enough-approvals"
 }
 
-func (check HasEnoughApprovalsCheck) PassedText(mergeRequestID int) string {
+func (check HasEnoughApprovalsCheck) PassedText(_ int) string {
 	return "Enough reviewers liked your changes"
 }
 

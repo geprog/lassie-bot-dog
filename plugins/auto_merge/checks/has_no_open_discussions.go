@@ -8,7 +8,7 @@ import (
 type HasNoOpenDiscussionsCheck struct {
 }
 
-func (check HasNoOpenDiscussionsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check HasNoOpenDiscussionsCheck) Check(_ *config.AutoMergeConfig, _ *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
 	return mergeRequest.BlockingDiscussionsResolved
 }
 
@@ -16,10 +16,10 @@ func (check HasNoOpenDiscussionsCheck) Name() string {
 	return "has-no-open-discussions"
 }
 
-func (check HasNoOpenDiscussionsCheck) PassedText(mergeRequestID int) string {
+func (check HasNoOpenDiscussionsCheck) PassedText(_ int) string {
 	return "All discussions about your changes have been resolved"
 }
 
-func (check HasNoOpenDiscussionsCheck) FailedText(mergeRequestID int) string {
+func (check HasNoOpenDiscussionsCheck) FailedText(_ int) string {
 	return "There are still some ongoing discussions about your changes"
 }
