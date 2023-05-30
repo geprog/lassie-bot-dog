@@ -8,7 +8,7 @@ import (
 type HasRequiredLabelsCheck struct {
 }
 
-func (check HasRequiredLabelsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check HasRequiredLabelsCheck) Check(config *config.AutoMergeConfig, _ *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
 	for _, neededLabel := range config.NeededLabels {
 		if !check.hasMergeRequestLabel(mergeRequest, neededLabel) {
 			return false
@@ -22,11 +22,11 @@ func (check HasRequiredLabelsCheck) Name() string {
 	return "has-labels"
 }
 
-func (check HasRequiredLabelsCheck) PassedText(mergeRequestID int) string {
+func (check HasRequiredLabelsCheck) PassedText(_ int) string {
 	return "Your Merge-Request has all required labels"
 }
 
-func (check HasRequiredLabelsCheck) FailedText(mergeRequestID int) string {
+func (check HasRequiredLabelsCheck) FailedText(_ int) string {
 	return "Your Merge-Request is missing some required labels" // TODO list missing labels
 }
 

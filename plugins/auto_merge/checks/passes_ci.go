@@ -11,7 +11,7 @@ type PassesCICheck struct {
 	Client *gitlab.Client
 }
 
-func (check PassesCICheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check PassesCICheck) Check(_ *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
 	pipelines, _, err := check.Client.MergeRequests.ListMergeRequestPipelines(project.ID, mergeRequest.IID)
 	if err != nil {
 		log.Error("Can't load merge-request pipelines", err)
@@ -25,10 +25,10 @@ func (check PassesCICheck) Name() string {
 	return "passes-ci"
 }
 
-func (check PassesCICheck) PassedText(mergeRequestID int) string {
+func (check PassesCICheck) PassedText(_ int) string {
 	return "A pipline successfully tested your changes"
 }
 
-func (check PassesCICheck) FailedText(mergeRequestID int) string {
+func (check PassesCICheck) FailedText(_ int) string {
 	return "A pipeline detected some errors with your changes"
 }

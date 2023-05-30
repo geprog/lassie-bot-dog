@@ -8,7 +8,7 @@ import (
 type HasNoConflictsCheck struct {
 }
 
-func (check HasNoConflictsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check HasNoConflictsCheck) Check(_ *config.AutoMergeConfig, _ *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
 	return !mergeRequest.HasConflicts
 }
 
@@ -16,10 +16,10 @@ func (check HasNoConflictsCheck) Name() string {
 	return "has-conflicts"
 }
 
-func (check HasNoConflictsCheck) PassedText(mergeRequestID int) string {
+func (check HasNoConflictsCheck) PassedText(_ int) string {
 	return "Your changes do not have conflicts with the target branch."
 }
 
-func (check HasNoConflictsCheck) FailedText(mergeRequestID int) string {
+func (check HasNoConflictsCheck) FailedText(_ int) string {
 	return "Your changes have some conflicts with the target branch"
 }
