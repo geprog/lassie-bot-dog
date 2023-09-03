@@ -82,11 +82,10 @@ func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *
 		status.err = err.Error()
 		plugin.updateStatusComment(project, mergeRequest, status)
 		return
-	} else {
-		log.Info("merged >>>", squashMessage)
-		status.merged = true
 	}
 
+	log.Info("merged >>>", squashMessage)
+	status.merged = true
 	plugin.updateStatusComment(project, mergedMergeRequest, status)
 }
 
