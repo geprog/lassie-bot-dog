@@ -28,6 +28,14 @@ func encodeMergeCheckStatus(mergeCheck mergeCheck, status *mergeStatus) string {
 func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	comment := authorTag + "\n"
 
+	if status.err != "" {
+		comment = comment + ":dog: I am sorry but I sniffed an error while checking your merge request:\n"
+		comment = comment + "```\n"
+		comment = comment + status.err + "\n"
+		comment = comment + "```\n"
+		comment = comment + "---\n"
+	}
+
 	if status.merged {
 		comment = comment + ":dog: Thank you for your contribution. Always nice to have some helping hands :feet:\n"
 		comment = comment + "---\n"
