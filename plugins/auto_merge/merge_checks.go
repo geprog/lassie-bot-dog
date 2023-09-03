@@ -67,6 +67,7 @@ func (plugin AutoMergePlugin) setupMergeChecks() {
 		},
 		checks.HasRequiredLabelsCheck{},
 		checks.HasNoConflictsCheck{},
+		checks.CanMergeCheck{},
 		checks.HasNoOpenDiscussionsCheck{},
 		checks.IsNotWorkInProgressCheck{},
 		checks.PassesCICheck{
