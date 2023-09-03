@@ -28,10 +28,10 @@ func encodeMergeCheckStatus(mergeCheck mergeCheck, status *mergeStatus) string {
 func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	comment := authorTag + "\n"
 
-	if status.err != "" {
+	if status.err != nil {
 		comment = comment + ":warning: I am sorry but I sniffed something strange while checking your merge request:\n"
 		comment = comment + "```\n"
-		comment = comment + status.err + "\n"
+		comment = comment + status.err.Error() + "\n"
 		comment = comment + "```\n"
 		comment = comment + "---\n"
 	}
