@@ -25,6 +25,7 @@ type mergeStatus struct {
 	checkResults    []*mergeCheckResult
 	merged          bool
 	allChecksPassed bool
+	err             error
 }
 
 func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {

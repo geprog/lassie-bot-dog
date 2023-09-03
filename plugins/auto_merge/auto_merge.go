@@ -78,12 +78,14 @@ func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *
 
 	mergedMergeRequest, _, err := plugin.Client.MergeRequests.AcceptMergeRequest(project.ID, mergeRequest.IID, acceptMergeRequestOptions)
 	if err != nil {
-		log.Debug("Can't merge", err)
-	} else {
-		log.Info("merged >>>", squashMessage)
-		status.merged = true
+		log.Error("Can't merge", err)
+		status.err = err
+		plugin.updateStatusComment(project, mergeRequest, status)
+		return
 	}
 
+	log.Info("merged >>>", squashMessage)
+	status.merged = true
 	plugin.updateStatusComment(project, mergedMergeRequest, status)
 }
 
