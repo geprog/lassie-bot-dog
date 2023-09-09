@@ -109,7 +109,7 @@ func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 		}
 		_, _, err := plugin.Client.Notes.UpdateMergeRequestNote(project.ID, mergeRequest.IID, note.ID, updateMergeRequestNoteOptions)
 		if err != nil {
-			log.Error("Failed to update merge request note")
+			log.Error("Failed to update merge request note (" + mergeRequest.WebURL + ")")
 		}
 
 		log.Debug("update comment")

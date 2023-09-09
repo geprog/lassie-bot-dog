@@ -68,7 +68,7 @@ func (plugin AutoMergePlugin) setupMergeChecks() {
 		},
 		checks.HasRequiredLabelsCheck{},
 		checks.HasNoConflictsCheck{},
-		checks.HasNoOpenDiscussionsCheck{},
+		checks.HasNoOpenDiscussionsCheck{Client: plugin.Client},
 		checks.IsNotWorkInProgressCheck{},
 		checks.PassesCICheck{
 			Client: plugin.Client,
