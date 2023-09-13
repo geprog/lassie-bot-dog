@@ -13,7 +13,7 @@ func Logger(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *log.Ent
 	if mergeRequest != nil {
 		fields = log.Fields{
 			"project":      project.NameWithNamespace,
-			"mergeRequest": mergeRequest.ID,
+			"mergeRequest": mergeRequest.IID,
 			"webURL":       mergeRequest.WebURL,
 		}
 	}
