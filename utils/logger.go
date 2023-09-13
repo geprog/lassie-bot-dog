@@ -7,14 +7,11 @@ import (
 
 func Logger(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *log.Entry {
 	fields := log.Fields{
-		"project": project.NameWithNamespace,
-		"webURL":  project.WebURL,
+		"webURL": project.WebURL,
 	}
 	if mergeRequest != nil {
 		fields = log.Fields{
-			"project":      project.NameWithNamespace,
-			"mergeRequest": mergeRequest.IID,
-			"webURL":       mergeRequest.WebURL,
+			"webURL": mergeRequest.WebURL,
 		}
 	}
 	return log.WithFields(fields)
