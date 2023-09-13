@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/GEPROG/lassie-bot-dog/utils"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -54,6 +54,7 @@ func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 }
 
 func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
+	log := utils.Logger(project, mergeRequest)
 	note, err := plugin.getStatusComment(project, mergeRequest)
 	if err != nil {
 		log.Error("Failed to get status comment: ", err)
@@ -95,6 +96,7 @@ func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 }
 
 func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
+	log := utils.Logger(project, mergeRequest)
 	log.Trace("comment", comment)
 
 	// update existing note
@@ -109,7 +111,7 @@ func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 		}
 		_, _, err := plugin.Client.Notes.UpdateMergeRequestNote(project.ID, mergeRequest.IID, note.ID, updateMergeRequestNoteOptions)
 		if err != nil {
-			log.Error("Failed to update merge request note")
+			log.Error("Failed to update merge request note: ", err)
 		}
 
 		log.Debug("update comment")
@@ -122,7 +124,7 @@ func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 	}
 	_, _, err := plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
 	if err != nil {
-		log.Error("Failed to create merge request note")
+		log.Error("Failed to create merge request note: ", err)
 	}
 
 	log.Debug("create comment")

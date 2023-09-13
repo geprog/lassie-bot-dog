@@ -6,7 +6,6 @@ import (
 
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/GEPROG/lassie-bot-dog/utils"
-	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -17,6 +16,7 @@ type HasEnoughApprovalsCheck struct {
 var missingApprovalForLabels map[int][]string
 
 func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+	log := utils.Logger(project, mergeRequest)
 	approvals, _, err := check.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
 	if err != nil {
 		log.Error("Can't load merge-request approvals", err)

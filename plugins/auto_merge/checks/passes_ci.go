@@ -2,7 +2,7 @@ package checks
 
 import (
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/GEPROG/lassie-bot-dog/utils"
 
 	"github.com/xanzy/go-gitlab"
 )
@@ -12,6 +12,7 @@ type PassesCICheck struct {
 }
 
 func (check PassesCICheck) Check(_ *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+	log := utils.Logger(project, mergeRequest)
 	pipelines, _, err := check.Client.MergeRequests.ListMergeRequestPipelines(project.ID, mergeRequest.IID)
 	if err != nil {
 		log.Error("Can't load merge-request pipelines", err)
