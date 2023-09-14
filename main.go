@@ -21,6 +21,7 @@ func loop(client *gitlab.Client) {
 		// Search: gitlab.String("lassie-test"),
 		Membership: gitlab.Bool(true), // only list projects that lassie is a member of
 		Sort:       gitlab.String("asc"),
+		Archived:   gitlab.Bool(false), // only list unarchived projects
 	}
 
 	for {
