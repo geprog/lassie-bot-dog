@@ -19,7 +19,7 @@ func (check HasNoOpenDiscussionsCheck) Check(_ *config.AutoMergeConfig, _ *gitla
 	}
 	for _, note := range notes {
 		if note.Resolvable && !note.Resolved {
-			log.Debug("Found unresolved discussion", mergeRequest.ProjectID, mergeRequest.IID, note.ID)
+			log.Debug("Found unresolved discussion", note.ID)
 			return false
 		}
 	}
