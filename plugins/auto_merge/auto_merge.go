@@ -9,7 +9,7 @@ import (
 
 	"github.com/GEPROG/lassie-bot-dog/config"
 	autoMergeConfig "github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
-	log "github.com/sirupsen/logrus"
+	"github.com/GEPROG/lassie-bot-dog/utils"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -32,6 +32,7 @@ func (plugin *AutoMergePlugin) Name() string {
 }
 
 func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
+	log := utils.Logger(project, nil)
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
 		log.Debug("Can't load config", err)
@@ -60,6 +61,7 @@ func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.Pr
 }
 
 func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
+	log := utils.Logger(project, mergeRequest)
 	log.Debug("trying to auto merge >>>", mergeRequest.Title)
 
 	status := plugin.checkMergeRequest(project, mergeRequest)
@@ -90,6 +92,7 @@ func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *
 }
 
 func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+	log := utils.Logger(project, nil)
 	var mergeRequests []*gitlab.MergeRequest
 
 	lastCheck := plugin.lastestChecks[project.ID]
@@ -119,12 +122,12 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 			if IsRefMergeRequest(pipeline.Ref) {
 				mergeRequestIID, err := GetMergeRequestIDFromRef(pipeline.Ref)
 				if err != nil {
-					log.Debug("Can't get merge-request id from ref", err)
+					log.Debug("Can't get merge-request id of pipeline ", pipeline.ID, " from ref ", pipeline.Ref, ": ", err)
 					continue
 				}
 				mergeRequest, _, err := plugin.Client.MergeRequests.GetMergeRequest(project.ID, mergeRequestIID, &gitlab.GetMergeRequestsOptions{})
 				if err != nil {
-					log.Debug("Can't load merge-request", err)
+					log.Debug("Can't load merge-request ", mergeRequestIID, ": ", err)
 					continue
 				}
 				mergeRequests = append(mergeRequests, mergeRequest)
@@ -144,6 +147,7 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 }
 
 func (plugin *AutoMergePlugin) getMergeRequests(project *gitlab.Project, lastCheck *time.Time) []*gitlab.MergeRequest {
+	log := utils.Logger(project, nil)
 	var mergeRequests []*gitlab.MergeRequest
 
 	opt := &gitlab.ListProjectMergeRequestsOptions{
