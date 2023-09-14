@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   lassie-bot-dog:
   - apiVersion: v2
+    appVersion: 0.2.3
+    created: "2023-09-14T12:26:18.893218316Z"
+    description: A Helm chart for lassie the bot dog
+    digest: 3f3942565e88184a99464db9c4869505ba4d2eeaef84a46f57c395d99e39bbe9
+    name: lassie-bot-dog
+    type: application
+    urls:
+    - https://github.com/geprog/lassie-bot-dog/releases/download/helm-0.2.3/lassie-bot-dog-0.2.3.tgz
+    version: 0.2.3
+  - apiVersion: v2
     appVersion: 0.2.2
     created: "2023-09-14T09:58:10.39610492Z"
     description: A Helm chart for lassie the bot dog
@@ -151,4 +161,4 @@ entries:
     urls:
     - https://github.com/geprog/lassie-bot-dog/releases/download/lassie-bot-dog-0.1.1/lassie-bot-dog-0.1.1.tgz
     version: 0.1.1
-generated: "2023-09-14T09:58:10.396397325Z"
+generated: "2023-09-14T12:26:18.893393521Z"
