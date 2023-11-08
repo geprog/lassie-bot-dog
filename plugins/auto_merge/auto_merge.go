@@ -130,6 +130,9 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 					log.Debug("Can't load merge-request ", mergeRequestIID, ": ", err)
 					continue
 				}
+				if mergeRequest.State != "opened" {
+					continue
+				}
 				mergeRequests = append(mergeRequests, mergeRequest)
 			}
 		}
