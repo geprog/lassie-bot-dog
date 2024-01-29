@@ -36,7 +36,7 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 		}
 
 		// get amount of users that need to approve and already approved
-		approvedBy := len(check.getApprovals(approvals.ApprovedBy, neededApproval.Users))
+		approvedBy := len(check.getApprovals(approvals.ApprovedBy, neededApproval.Users, mergeRequest.Assignee))
 		atLeast := utils.Max(neededApproval.AtLeast, 1)
 
 		if approvedBy < atLeast {
@@ -64,11 +64,11 @@ func (check HasEnoughApprovalsCheck) FailedText(mergeRequestID int) string {
 	return fmt.Sprintf("You still need some review for your changes %s", missingLabels)
 }
 
-func (check HasEnoughApprovalsCheck) getApprovals(approvedByAll []*gitlab.MergeRequestApproverUser, possibleApprovers []string) []string {
+func (check HasEnoughApprovalsCheck) getApprovals(approvedByAll []*gitlab.MergeRequestApproverUser, possibleApprovers []string, assignee *gitlab.BasicUser) []string {
 	var approvedBy []string
 
 	for _, approver := range approvedByAll {
-		if utils.StringInSlice(approver.User.Username, possibleApprovers) {
+		if utils.StringInSlice(approver.User.Username, possibleApprovers) && approver.User.Username != assignee.Username {
 			approvedBy = append(approvedBy, approver.User.Username)
 		}
 	}
