@@ -70,6 +70,7 @@ func (plugin AutoMergePlugin) setupMergeChecks() {
 		checks.HasNoConflictsCheck{},
 		checks.HasNoOpenDiscussionsCheck{Client: plugin.Client},
 		checks.IsNotWorkInProgressCheck{},
+		checks.HasAssignee{},
 		checks.PassesCICheck{
 			Client: plugin.Client,
 		},
