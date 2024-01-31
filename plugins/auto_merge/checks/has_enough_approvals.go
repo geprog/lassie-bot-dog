@@ -68,7 +68,7 @@ func (check HasEnoughApprovalsCheck) getApprovals(approvedByAll []*gitlab.MergeR
 	var approvedBy []string
 
 	for _, approver := range approvedByAll {
-		if utils.StringInSlice(approver.User.Username, possibleApprovers) && assignee != nil && approver.User.Username != assignee.Username {
+		if utils.StringInSlice(approver.User.Username, possibleApprovers) && (assignee == nil || approver.User.Username != assignee.Username) {
 			approvedBy = append(approvedBy, approver.User.Username)
 		}
 	}
