@@ -3,6 +3,7 @@ package auto_merge
 import (
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/checks"
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
+	"github.com/GEPROG/lassie-bot-dog/utils"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -58,11 +59,7 @@ func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 }
 
 func (plugin AutoMergePlugin) setupMergeChecks(config *config.AutoMergeConfig) {
-	if mergeChecks != nil {
-		return
-	}
-
-	mergeChecks = []mergeCheck{
+	allMergeChecks := []mergeCheck{
 		checks.HasEnoughApprovalsCheck{
 			Client: plugin.Client,
 		},
@@ -80,13 +77,14 @@ func (plugin AutoMergePlugin) setupMergeChecks(config *config.AutoMergeConfig) {
 
 	if config.IgnoredChecks != nil {
 		// filter out ignored checks
-		mergeChecks = mergeChecks.filter(func(check mergeCheck) bool {
-			for _, ignoredCheck := range config.IgnoredChecks {
-				if check.Name() == ignoredCheck {
-					return false
-				}
+		var _mergeChecks []mergeCheck
+		for _, check := range allMergeChecks {
+			if utils.StringInSlice(check.Name(), config.IgnoredChecks) {
+				mergeChecks = append(mergeChecks, check)
 			}
-			return true
-		})
+		}
+		mergeChecks = _mergeChecks
+	} else {
+		mergeChecks = allMergeChecks
 	}
 }
