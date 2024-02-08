@@ -1,7 +1,7 @@
 # Lassie
 
 > :dog: Lassie loves :hotdog: `s and her doghouse is in the garden of Gitlab,
- but as a Rough Collie she has more to offer:
+> but as a Rough Collie she has more to offer:
 
 - She can check your progress on Merge-Requests, merge them and hand out treats for diligent contributors
 - More to come ...
@@ -53,13 +53,30 @@ helm delete my-lassie-bot-dog
 
 Lassie can be controlled with a config file. To enable lassie for a project you have to create this file called `lassie.json` at the top-level of the repository.
 
-```json5
+```json
 {
   "$schema": "https://geprog.github.io/lassie-bot-dog/lassie.schema.json",
   "plugins": {
     "auto_merge": {
       "squash": true,
-      "neededLabels": ["👀 Ready for Review"]
+      "neededLabels": ["👀 Ready for Review"],
+      "neededApprovals": [
+        {
+          "label": "*",
+          "users": ["maintainer", "maintainer-2"],
+          "atLeast": 1
+        }
+      ],
+      // "ignoredChecks": [
+      //   "has-assignee",
+      //   "has-labels",
+      //   "passes-ci",
+      //   "is-title-using-conventional-commit",
+      //   "is-not-work-in-progress",
+      //   "has-no-open-discussions",
+      //   "has-conflicts",
+      //   "has-enough-approvals"
+      // ]
     }
   }
 }

@@ -59,6 +59,15 @@
               },
               "minItems": 1,
               "uniqueItems": true
+            },
+            "ignoredChecks": {
+              "description": "Checks that are ignored when auto merging",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
             }
           }
         }

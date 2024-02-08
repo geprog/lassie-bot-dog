@@ -3,6 +3,7 @@ package auto_merge
 import (
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/checks"
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
+	"github.com/GEPROG/lassie-bot-dog/utils"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -30,7 +31,7 @@ type mergeStatus struct {
 
 func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
 	// TODO: find better place to load this
-	plugin.setupMergeChecks()
+	plugin.setupMergeChecks(plugin.loadedConfig)
 
 	status := &mergeStatus{
 		mergeRequestID:  mergeRequest.ID,
@@ -57,12 +58,8 @@ func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 	return status
 }
 
-func (plugin AutoMergePlugin) setupMergeChecks() {
-	if mergeChecks != nil {
-		return
-	}
-
-	mergeChecks = []mergeCheck{
+func (plugin AutoMergePlugin) setupMergeChecks(config *config.AutoMergeConfig) {
+	allMergeChecks := []mergeCheck{
 		checks.HasEnoughApprovalsCheck{
 			Client: plugin.Client,
 		},
@@ -76,5 +73,18 @@ func (plugin AutoMergePlugin) setupMergeChecks() {
 			Client: plugin.Client,
 		},
 		checks.IsTitleUsingConventionalCommit{},
+	}
+
+	if config.IgnoredChecks != nil {
+		// filter out ignored checks
+		var _mergeChecks []mergeCheck
+		for _, check := range allMergeChecks {
+			if utils.StringInSlice(check.Name(), config.IgnoredChecks) {
+				mergeChecks = append(mergeChecks, check)
+			}
+		}
+		mergeChecks = _mergeChecks
+	} else {
+		mergeChecks = allMergeChecks
 	}
 }
