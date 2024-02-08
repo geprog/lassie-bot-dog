@@ -68,7 +68,6 @@ Lassie can be controlled with a config file. To enable lassie for a project you 
         }
       ],
       // "ignoredChecks": [
-      //   "has-milestone",
       //   "has-assignee",
       //   "has-labels",
       //   "passes-ci",
