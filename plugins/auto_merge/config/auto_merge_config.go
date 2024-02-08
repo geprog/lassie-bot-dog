@@ -10,4 +10,5 @@ type AutoMergeConfig struct {
 	Squash          bool             `json:"squash"`
 	NeededLabels    []string         `json:"neededLabels"`
 	NeededApprovals []NeededApproval `json:"neededApprovals"`
+	IgnoredChecks   []string         `json:"ignoredChecks"`
 }

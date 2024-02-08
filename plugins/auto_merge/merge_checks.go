@@ -30,7 +30,7 @@ type mergeStatus struct {
 
 func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
 	// TODO: find better place to load this
-	plugin.setupMergeChecks()
+	plugin.setupMergeChecks(plugin.loadedConfig)
 
 	status := &mergeStatus{
 		mergeRequestID:  mergeRequest.ID,
@@ -57,7 +57,7 @@ func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 	return status
 }
 
-func (plugin AutoMergePlugin) setupMergeChecks() {
+func (plugin AutoMergePlugin) setupMergeChecks(config *config.AutoMergeConfig) {
 	if mergeChecks != nil {
 		return
 	}
@@ -71,9 +71,22 @@ func (plugin AutoMergePlugin) setupMergeChecks() {
 		checks.HasNoOpenDiscussionsCheck{Client: plugin.Client},
 		checks.IsNotWorkInProgressCheck{},
 		checks.HasAssignee{},
+		checks.HasMilestone{},
 		checks.PassesCICheck{
 			Client: plugin.Client,
 		},
 		checks.IsTitleUsingConventionalCommit{},
+	}
+
+	if config.IgnoredChecks != nil {
+		// filter out ignored checks
+		mergeChecks = mergeChecks.filter(func(check mergeCheck) bool {
+			for _, ignoredCheck := range config.IgnoredChecks {
+				if check.Name() == ignoredCheck {
+					return false
+				}
+			}
+			return true
+		})
 	}
 }
