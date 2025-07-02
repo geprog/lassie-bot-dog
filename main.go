@@ -27,7 +27,7 @@ func loop(client *gitlab.Client) {
 	for {
 		projects, resp, err := client.Projects.ListProjects(listProjectsOptions)
 		if err != nil {
-			log.Debugf("Failed to receive project list: %v", err)
+			log.Errorf("Failed to receive project list: %v", err)
 			return
 		}
 

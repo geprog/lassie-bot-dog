@@ -35,7 +35,7 @@ func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.Pr
 	log := utils.Logger(project, nil)
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
-		log.Debug("Can't load config", err)
+		log.Error("Can't load config", err)
 		return
 	}
 	log.Debugf("Loaded config: %+v", plugin.loadedConfig)
@@ -114,7 +114,7 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 	for {
 		pipelines, resp, err := plugin.Client.Pipelines.ListProjectPipelines(project.ID, opt)
 		if err != nil {
-			log.Debug("Can't load pipelines", err)
+			log.Error("Can't load pipelines", err)
 		}
 
 		for _, pipeline := range pipelines {
@@ -122,12 +122,12 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 			if IsRefMergeRequest(pipeline.Ref) {
 				mergeRequestIID, err := GetMergeRequestIDFromRef(pipeline.Ref)
 				if err != nil {
-					log.Debug("Can't get merge-request id of pipeline ", pipeline.ID, " from ref ", pipeline.Ref, ": ", err)
+					log.Error("Can't get merge-request id of pipeline ", pipeline.ID, " from ref ", pipeline.Ref, ": ", err)
 					continue
 				}
 				mergeRequest, _, err := plugin.Client.MergeRequests.GetMergeRequest(project.ID, mergeRequestIID, &gitlab.GetMergeRequestsOptions{})
 				if err != nil {
-					log.Debug("Can't load merge-request ", mergeRequestIID, ": ", err)
+					log.Error("Can't load merge-request ", mergeRequestIID, ": ", err)
 					continue
 				}
 				if mergeRequest.State != "opened" {
@@ -167,7 +167,7 @@ func (plugin *AutoMergePlugin) getMergeRequests(project *gitlab.Project, lastChe
 		// Get the first page with merge-requests
 		_mergeRequests, resp, err := plugin.Client.MergeRequests.ListProjectMergeRequests(project.ID, opt)
 		if err != nil {
-			log.Debug("Can't load merge-requests", err)
+			log.Error("Can't load merge-requests", err)
 		}
 
 		mergeRequests = append(mergeRequests, _mergeRequests...)
