@@ -59,7 +59,8 @@ Lassie can be controlled with a config file. To enable lassie for a project you 
   "plugins": {
     "auto_merge": {
       "squash": true,
-      "neededLabels": ["👀 Ready for Review"]
+      "neededLabels": ["👀 Ready for Review"],
+      "requireMilestone": true
     }
   }
 }

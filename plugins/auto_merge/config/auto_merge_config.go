@@ -7,7 +7,8 @@ type NeededApproval struct {
 }
 
 type AutoMergeConfig struct {
-	Squash          bool             `json:"squash"`
-	NeededLabels    []string         `json:"neededLabels"`
-	NeededApprovals []NeededApproval `json:"neededApprovals"`
+	Squash           bool             `json:"squash"`
+	NeededLabels     []string         `json:"neededLabels"`
+	NeededApprovals  []NeededApproval `json:"neededApprovals"`
+	RequireMilestone bool             `json:"requireMilestone"`
 }
