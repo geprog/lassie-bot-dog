@@ -36,7 +36,10 @@
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["users", "label"],
+                "required": [
+                  "users",
+                  "label"
+                ],
                 "properties": {
                   "users": {
                     "type": "array",
@@ -59,6 +62,10 @@
               },
               "minItems": 1,
               "uniqueItems": true
+            },
+            "requireMilestone": {
+              "description": "Whether or not a milestone is required for a merge request to be auto merged",
+              "type": "boolean"
             }
           }
         }
