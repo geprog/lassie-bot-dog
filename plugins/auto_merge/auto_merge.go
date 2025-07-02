@@ -33,6 +33,7 @@ func (plugin *AutoMergePlugin) Name() string {
 
 func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.ProjectConfig) {
 	log := utils.Logger(project, nil)
+	plugin.loadedConfig = &autoMergeConfig.AutoMergeConfig{}
 	err := json.Unmarshal(config.Plugins[plugin.Name()], &plugin.loadedConfig)
 	if err != nil {
 		log.Error("Can't load config", err)
