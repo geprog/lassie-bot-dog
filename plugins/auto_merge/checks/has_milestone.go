@@ -8,8 +8,8 @@ import (
 type HasMilestone struct {
 }
 
-func (check HasMilestone) Check(config *config.AutoMergeConfig, _ *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
-	return !config.RequireMilestone || mergeRequest.Milestone != nil
+func (check HasMilestone) Check(_ *config.AutoMergeConfig, _ *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+	return mergeRequest.Milestone != nil
 }
 
 func (check HasMilestone) Name() string {
