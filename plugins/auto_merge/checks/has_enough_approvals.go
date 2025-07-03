@@ -30,6 +30,11 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 	missingApprovalForLabels[mergeRequest.ID] = []string{}
 
 	for _, neededApproval := range config.NeededApprovals {
+		if neededApproval.Label == "" || len(neededApproval.Users) == 0 {
+			log.Warn("Invalid needed approval config")
+			return false
+		}
+
 		// skip (don't require approval) if the label does not exists on the MR and the required label is not a wildcard (always check)
 		if !utils.StringInSlice(neededApproval.Label, mergeRequest.Labels) && neededApproval.Label != "*" {
 			continue
