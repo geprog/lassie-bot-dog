@@ -2,7 +2,7 @@ package plugins
 
 import (
 	"github.com/GEPROG/lassie-bot-dog/config"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 type Plugin interface {

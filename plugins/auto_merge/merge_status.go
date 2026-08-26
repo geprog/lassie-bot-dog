@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/GEPROG/lassie-bot-dog/utils"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 const authorTag = "<!-- author:lassie-bot-dog -->"
@@ -53,7 +53,7 @@ func (plugin AutoMergePlugin) encodeMergeStatus(status *mergeStatus) string {
 	return strings.TrimSuffix(comment, "\n")
 }
 
-func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, status *mergeStatus) {
+func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest, status *mergeStatus) {
 	log := utils.Logger(project, mergeRequest)
 	note, err := plugin.getStatusComment(project, mergeRequest)
 	if err != nil {
@@ -64,9 +64,9 @@ func (plugin AutoMergePlugin) updateStatusComment(project *gitlab.Project, merge
 	plugin.saveStatusComment(project, mergeRequest, comment, note)
 }
 
-func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) (*gitlab.Note, error) {
+func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest) (*gitlab.Note, error) {
 	listMergeRequestNotesOptions := &gitlab.ListMergeRequestNotesOptions{
-		Sort: gitlab.String("asc"), // oldest first as lassie should do one of the first comments
+		Sort: gitlab.Ptr("asc"), // oldest first as lassie should do one of the first comments
 	}
 	r, _ := regexp.Compile("^" + authorTag + ".*?")
 
@@ -95,7 +95,7 @@ func (plugin AutoMergePlugin) getStatusComment(project *gitlab.Project, mergeReq
 	return nil, nil
 }
 
-func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.MergeRequest, comment string, note *gitlab.Note) {
+func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest, comment string, note *gitlab.Note) {
 	log := utils.Logger(project, mergeRequest)
 	log.Trace("comment", comment)
 
@@ -107,7 +107,7 @@ func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 		}
 
 		updateMergeRequestNoteOptions := &gitlab.UpdateMergeRequestNoteOptions{
-			Body: gitlab.String(comment),
+			Body: gitlab.Ptr(comment),
 		}
 		_, _, err := plugin.Client.Notes.UpdateMergeRequestNote(project.ID, mergeRequest.IID, note.ID, updateMergeRequestNoteOptions)
 		if err != nil {
@@ -120,7 +120,7 @@ func (plugin AutoMergePlugin) saveStatusComment(project *gitlab.Project, mergeRe
 	}
 
 	createMergeRequestNoteOptions := &gitlab.CreateMergeRequestNoteOptions{
-		Body: gitlab.String(comment),
+		Body: gitlab.Ptr(comment),
 	}
 	_, _, err := plugin.Client.Notes.CreateMergeRequestNote(project.ID, mergeRequest.IID, createMergeRequestNoteOptions)
 	if err != nil {

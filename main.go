@@ -9,7 +9,7 @@ import (
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 var loadedPlugins []plugins.Plugin
@@ -18,10 +18,10 @@ func loop(client *gitlab.Client) {
 	log.Debug("Starting plugin loop ...")
 
 	listProjectsOptions := &gitlab.ListProjectsOptions{
-		// Search: gitlab.String("lassie-test"),
-		Membership: gitlab.Bool(true), // only list projects that lassie is a member of
-		Sort:       gitlab.String("asc"),
-		Archived:   gitlab.Bool(false), // only list unarchived projects
+		// Search: gitlab.Ptr("lassie-test"),
+		Membership: gitlab.Ptr(true), // only list projects that lassie is a member of
+		Sort:       gitlab.Ptr("asc"),
+		Archived:   gitlab.Ptr(false), // only list unarchived projects
 	}
 
 	for {
