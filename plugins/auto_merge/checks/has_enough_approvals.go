@@ -6,16 +6,16 @@ import (
 
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/GEPROG/lassie-bot-dog/utils"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 type HasEnoughApprovalsCheck struct {
 	Client *gitlab.Client
 }
 
-var missingApprovalForLabels map[int][]string
+var missingApprovalForLabels map[int64][]string
 
-func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool {
+func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest) bool {
 	log := utils.Logger(project, mergeRequest)
 	approvals, _, err := check.Client.MergeRequests.GetMergeRequestApprovals(project.ID, mergeRequest.IID)
 	if err != nil {
@@ -24,7 +24,7 @@ func (check HasEnoughApprovalsCheck) Check(config *config.AutoMergeConfig, proje
 	}
 
 	if missingApprovalForLabels == nil {
-		missingApprovalForLabels = make(map[int][]string)
+		missingApprovalForLabels = make(map[int64][]string)
 	}
 
 	missingApprovalForLabels[mergeRequest.ID] = []string{}
@@ -55,11 +55,11 @@ func (check HasEnoughApprovalsCheck) Name() string {
 	return "has-enough-approvals"
 }
 
-func (check HasEnoughApprovalsCheck) PassedText(_ int) string {
+func (check HasEnoughApprovalsCheck) PassedText(_ int64) string {
 	return "Enough reviewers liked your changes"
 }
 
-func (check HasEnoughApprovalsCheck) FailedText(mergeRequestID int) string {
+func (check HasEnoughApprovalsCheck) FailedText(mergeRequestID int64) string {
 	missingLabels := strings.Join(missingApprovalForLabels[mergeRequestID], ", ")
 	return fmt.Sprintf("You still need some review for your changes %s", missingLabels)
 }

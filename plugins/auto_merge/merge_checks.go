@@ -3,16 +3,16 @@ package auto_merge
 import (
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/checks"
 	"github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 var mergeChecks []mergeCheck
 
 type mergeCheck interface {
-	Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.MergeRequest) bool
+	Check(config *config.AutoMergeConfig, project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest) bool
 	Name() string
-	FailedText(mergeRequestID int) string
-	PassedText(mergeRequestID int) string
+	FailedText(mergeRequestID int64) string
+	PassedText(mergeRequestID int64) string
 }
 
 type mergeCheckResult struct {
@@ -21,14 +21,14 @@ type mergeCheckResult struct {
 }
 
 type mergeStatus struct {
-	mergeRequestID  int
+	mergeRequestID  int64
 	checkResults    []*mergeCheckResult
 	merged          bool
 	allChecksPassed bool
 	err             error
 }
 
-func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) *mergeStatus {
+func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest) *mergeStatus {
 	// TODO: find better place to load this
 	plugin.setupMergeChecks(plugin.loadedConfig)
 

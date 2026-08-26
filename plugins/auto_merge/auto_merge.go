@@ -10,19 +10,19 @@ import (
 	"github.com/GEPROG/lassie-bot-dog/config"
 	autoMergeConfig "github.com/GEPROG/lassie-bot-dog/plugins/auto_merge/config"
 	"github.com/GEPROG/lassie-bot-dog/utils"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 type AutoMergePlugin struct {
 	latestFullCheck *time.Time
-	lastestChecks   map[int]*time.Time
+	lastestChecks   map[int64]*time.Time
 	loadedConfig    *autoMergeConfig.AutoMergeConfig
 	Client          *gitlab.Client
 }
 
 func NewAutoMergePlugin(client *gitlab.Client) *AutoMergePlugin {
 	return &AutoMergePlugin{
-		lastestChecks: make(map[int]*time.Time),
+		lastestChecks: make(map[int64]*time.Time),
 		Client:        client,
 	}
 }
@@ -43,7 +43,7 @@ func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.Pr
 
 	now := time.Now()
 
-	mergeRequests := []*gitlab.MergeRequest{}
+	mergeRequests := []*gitlab.BasicMergeRequest{}
 
 	if plugin.latestFullCheck == nil || plugin.latestFullCheck.Add(time.Minute*5).Before(now) {
 		mergeRequests = append(mergeRequests, plugin.getMergeRequests(project, nil)...)
@@ -61,7 +61,7 @@ func (plugin *AutoMergePlugin) Execute(project *gitlab.Project, config config.Pr
 	log.Debugf("checked total of %d merge-requests\n", len(mergeRequests))
 }
 
-func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.MergeRequest) {
+func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *gitlab.BasicMergeRequest) {
 	log := utils.Logger(project, mergeRequest)
 	log.Debug("trying to auto merge >>>", mergeRequest.Title)
 
@@ -74,9 +74,9 @@ func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *
 
 	squashMessage := fmt.Sprintf("%s (!%d)", mergeRequest.Title, mergeRequest.IID)
 	acceptMergeRequestOptions := &gitlab.AcceptMergeRequestOptions{
-		SquashCommitMessage:      gitlab.String(squashMessage),
-		ShouldRemoveSourceBranch: gitlab.Bool(true),
-		Squash:                   gitlab.Bool(plugin.loadedConfig.Squash),
+		SquashCommitMessage:      gitlab.Ptr(squashMessage),
+		ShouldRemoveSourceBranch: gitlab.Ptr(true),
+		Squash:                   gitlab.Ptr(plugin.loadedConfig.Squash),
 	}
 
 	mergedMergeRequest, _, err := plugin.Client.MergeRequests.AcceptMergeRequest(project.ID, mergeRequest.IID, acceptMergeRequestOptions)
@@ -89,12 +89,12 @@ func (plugin *AutoMergePlugin) autoMerge(project *gitlab.Project, mergeRequest *
 
 	log.Info("merged >>>", squashMessage)
 	status.merged = true
-	plugin.updateStatusComment(project, mergedMergeRequest, status)
+	plugin.updateStatusComment(project, &mergedMergeRequest.BasicMergeRequest, status)
 }
 
-func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.Project) []*gitlab.BasicMergeRequest {
 	log := utils.Logger(project, nil)
-	var mergeRequests []*gitlab.MergeRequest
+	var mergeRequests []*gitlab.BasicMergeRequest
 
 	lastCheck := plugin.lastestChecks[project.ID]
 
@@ -105,7 +105,7 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 
 	opt := &gitlab.ListProjectPipelinesOptions{
 		UpdatedAfter: lastCheck,
-		Scope:        gitlab.String("finished"),
+		Scope:        gitlab.Ptr("finished"),
 		ListOptions: gitlab.ListOptions{
 			PerPage: 10,
 			Page:    1,
@@ -134,7 +134,7 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 				if mergeRequest.State != "opened" {
 					continue
 				}
-				mergeRequests = append(mergeRequests, mergeRequest)
+				mergeRequests = append(mergeRequests, &mergeRequest.BasicMergeRequest)
 			}
 		}
 
@@ -150,12 +150,12 @@ func (plugin *AutoMergePlugin) getUpdatedPipelineMergeRequests(project *gitlab.P
 	return mergeRequests
 }
 
-func (plugin *AutoMergePlugin) getMergeRequests(project *gitlab.Project, lastCheck *time.Time) []*gitlab.MergeRequest {
+func (plugin *AutoMergePlugin) getMergeRequests(project *gitlab.Project, lastCheck *time.Time) []*gitlab.BasicMergeRequest {
 	log := utils.Logger(project, nil)
-	var mergeRequests []*gitlab.MergeRequest
+	var mergeRequests []*gitlab.BasicMergeRequest
 
 	opt := &gitlab.ListProjectMergeRequestsOptions{
-		State: gitlab.String("opened"),
+		State: gitlab.Ptr("opened"),
 		// TargetBranch: &project.DefaultBranch,
 		UpdatedAfter: lastCheck,
 		ListOptions: gitlab.ListOptions{
@@ -185,7 +185,7 @@ func (plugin *AutoMergePlugin) getMergeRequests(project *gitlab.Project, lastChe
 	return mergeRequests
 }
 
-func (plugin *AutoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.MergeRequest {
+func (plugin *AutoMergePlugin) getUpdatedMergeRequests(project *gitlab.Project) []*gitlab.BasicMergeRequest {
 	lastCheck := plugin.lastestChecks[project.ID]
 
 	return plugin.getMergeRequests(project, lastCheck)
@@ -195,12 +195,12 @@ func IsRefMergeRequest(ref string) bool {
 	return strings.HasPrefix(ref, "refs/merge-requests/")
 }
 
-func GetMergeRequestIDFromRef(ref string) (int, error) {
+func GetMergeRequestIDFromRef(ref string) (int64, error) {
 	refID := ref
 	refID = strings.TrimPrefix(refID, "refs/merge-requests/")
 	refID = strings.TrimSuffix(refID, "/head")
 
-	mergeRequestIID, err := strconv.Atoi(refID)
+	mergeRequestIID, err := strconv.ParseInt(refID, 10, 64)
 	if err != nil {
 		return -1, err
 	}
