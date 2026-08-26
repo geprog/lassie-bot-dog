@@ -21,7 +21,8 @@ builds:
 archives:
   - format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     files:
       - README.md
       - LICENSE
@@ -29,19 +30,19 @@ archives:
 checksum:
   name_template: "checksums.txt"
 snapshot:
-  name_template: 'snapshot-{{ time "2006-01-02" }}'
+  version_template: 'snapshot-{{ time "2006-01-02" }}'
 changelog:
   sort: asc
   filters:
     exclude:
       - "^docs:"
       - "^test:"
-dockers:
-  - # GOOS of the built binary that should be used.
-    goos: linux
-    # GOARCH of the built binary that should be used.
-    goarch: amd64
+dockers_v2:
+  - images:
+      - "ghcr.io/geprog/lassie-bot-dog"
+    tags:
+      - "{{ .Tag }}"
+      - "latest"
     dockerfile: Dockerfile
-    image_templates:
-      - "ghcr.io/geprog/lassie-bot-dog:{{ .Tag }}"
-      - "ghcr.io/geprog/lassie-bot-dog:latest"
+    platforms:
+      - linux/amd64

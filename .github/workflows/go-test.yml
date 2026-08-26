@@ -10,10 +10,15 @@ on:
     branches:
       - main
 
+permissions: {}
+
 jobs:
   build:
     name: Test on Go ${{ matrix.go-version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      # check out the repository
+      contents: read
     strategy:
       matrix:
         go-version: ["1.27.x"]
