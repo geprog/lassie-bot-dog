@@ -1,21 +1,27 @@
-linters-settings:
-  misspell:
-    locale: US
+version: "2"
 
 linters:
   enable:
     - errcheck
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - revive
     - staticcheck
-    - typecheck
     - unused
     - whitespace
+  settings:
+    misspell:
+      locale: US
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - text: "don't use an underscore in package name"
 
-issues:
-  exclude:
-    - "don't use an underscore in package name"
+formatters:
+  enable:
+    - goimports
