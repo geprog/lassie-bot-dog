@@ -8,14 +8,16 @@ on:
   pull_request:
     branches:
       - main
-permissions:
-  contents: read
-  # Optional: allow read access to pull request. Use with `only-new-issues` option.
-  # pull-requests: read
+permissions: {}
 jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
+    permissions:
+      # check out the repository
+      contents: read
+      # Optional: allow read access to pull request. Use with `only-new-issues` option.
+      # pull-requests: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
