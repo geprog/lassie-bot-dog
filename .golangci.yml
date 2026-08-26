@@ -1,7 +1,8 @@
 version: "2"
-
 linters:
+  default: none
   enable:
+    - bidichk
     - errcheck
     - govet
     - ineffassign
@@ -13,15 +14,33 @@ linters:
   settings:
     misspell:
       locale: US
+    revive:
+      enable-default-rules: true
+      rules:
+        - name: var-naming
+          exclude: [""]
+          arguments:
+            - [] # AllowList
+            - [] # DenyList
+            - - skip-package-name-checks: true
   exclusions:
+    generated: lax
     presets:
       - comments
       - common-false-positives
       - legacy
       - std-error-handling
-    rules:
-      - text: "don't use an underscore in package name"
-
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 formatters:
   enable:
+    - gofmt
     - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
