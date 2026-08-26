@@ -35,7 +35,7 @@ func (plugin AutoMergePlugin) checkMergeRequest(project *gitlab.Project, mergeRe
 	status := &mergeStatus{
 		mergeRequestID:  mergeRequest.ID,
 		checkResults:    []*mergeCheckResult{},
-		merged:          mergeRequest.MergedBy != nil,
+		merged:          mergeRequest.MergeUser != nil,
 		allChecksPassed: true,
 	}
 
