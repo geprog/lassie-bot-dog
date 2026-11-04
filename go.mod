@@ -1,6 +1,6 @@
 module github.com/GEPROG/lassie-bot-dog
 
-go 1.27
+go 1.27.3
 
 require (
 	github.com/go-co-op/gocron v1.37.0
