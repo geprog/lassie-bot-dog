@@ -12,7 +12,7 @@ image:
   pullPolicy: IfNotPresent
   repository: "ghcr.io/geprog/lassie-bot-dog"
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "@sha256:dbd3fde3998f5b001c2a037251a1fc4fb9674e4e4fff45934b2a90dd661c3422"
 
 imagePullSecrets: []
 nameOverride: ""
